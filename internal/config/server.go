@@ -6,6 +6,7 @@ import (
 )
 
 type ServerConfig struct {
+	Address      string
 	Port         int
 	Environment  string
 	ReadTimeout  time.Duration
@@ -15,6 +16,7 @@ type ServerConfig struct {
 
 func newServerConfig() *ServerConfig {
 	return &ServerConfig{
+		Address:      utils.MustGetStrEnv("SERVER_ADDRESS"),
 		Port:         utils.MustGetIntEnv("SERVER_PORT"),
 		Environment:  utils.MustGetStrEnv("ENVIRONMENT"),
 		ReadTimeout:  utils.MustGetDurationEnv("SERVER_READ_TIMEOUT"),
