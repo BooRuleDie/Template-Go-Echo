@@ -141,7 +141,7 @@ func TestGetDurationEnv(t *testing.T) {
 		}, "expected panic for invalid duration value")
 
 		require.Panics(t, func() {
-			os.Setenv("TEST_DURATION_ENV", "123") // integer string is not valid duration
+			os.Setenv("TEST_DURATION_ENV", "123")
 			defer os.Unsetenv("TEST_DURATION_ENV")
 
 			GetDurationEnv("TEST_DURATION_ENV", 1*time.Second)

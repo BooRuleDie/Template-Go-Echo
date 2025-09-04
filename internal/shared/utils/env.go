@@ -18,7 +18,7 @@ func MustGetStrEnv(key string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
 	}
-	
+
 	panic("missing required environment variable: " + key)
 }
 
