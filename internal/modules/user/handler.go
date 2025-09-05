@@ -1,6 +1,7 @@
 package user
 
 import (
+	"database/sql"
 	"net/http"
 	"strconv"
 
@@ -12,8 +13,8 @@ type UserHandler struct {
 	service UserService
 }
 
-func NewUserHandler() *UserHandler {
-	userRepo := NewUserRepository()
+func NewUserHandler(db *sql.DB) *UserHandler {
+	userRepo := NewUserRepository(db)
 	userService := NewUserService(userRepo)
 	return &UserHandler{service: userService}
 }

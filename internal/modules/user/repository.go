@@ -1,6 +1,9 @@
 package user
 
-import "errors"
+import (
+	"database/sql"
+	"errors"
+)
 
 var (
 	ErrUserNotFound      = errors.New("user not found")
@@ -15,47 +18,57 @@ type Repository interface {
 }
 
 type userRepository struct {
-	users map[int]*User
+	db *sql.DB
 }
 
-func NewUserRepository() Repository {
-	return &userRepository{
-		users: map[int]*User{
-			1: {ID: 1, Name: "Alice", Email: "alice@example.com"},
-			2: {ID: 2, Name: "Bob", Email: "bob@example.com"},
-			3: {ID: 3, Name: "Carol", Email: "carol@example.com"},
-		},
-	}
+func NewUserRepository(db *sql.DB) Repository {
+	return &userRepository{db: db}
 }
 
 func (r *userRepository) GetUserById(id int) (*User, error) {
-	user, exists := r.users[id]
-	if !exists {
+	query := `SELECT id, name, email FROM users WHERE id = $1`
+
+	user := new(User)
+	row := r.db.QueryRow(query, id)
+	err := row.Scan(&user.ID, &user.Name, &user.Email)
+	if err == sql.ErrNoRows {
 		return nil, ErrUserNotFound
+	}
+	if err != nil {
+		return nil, err
 	}
 	return user, nil
 }
 
 func (r *userRepository) CreateUser(user *User) error {
-	if _, exists := r.users[user.ID]; exists {
-		return ErrUserAlreadyExists
-	}
-	r.users[user.ID] = user
-	return nil
+	query := `INSERT INTO users (name, email) VALUES ($1, $2, $3)`
+	_, err := r.db.Exec(
+		query,
+		user.Name, user.Email,
+	)
+
+	return err
 }
 
 func (r *userRepository) DeleteUser(id int) error {
-	if _, exists := r.users[id]; !exists {
-		return ErrUserNotFound
-	}
-	delete(r.users, id)
-	return nil
+	query := `DELETE FROM users WHERE id = ?`
+	_, err := r.db.Exec(query, id)
+
+	return err
 }
 
 func (r *userRepository) UpdateUser(user *User) error {
-	if _, exists := r.users[user.ID]; !exists {
+	query := `UPDATE users SET name = $1, email = $2 WHERE id = $3`
+	result, err := r.db.Exec(query, user.Name, user.Email, user.ID)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
 		return ErrUserNotFound
 	}
-	r.users[user.ID] = user
 	return nil
 }
