@@ -10,7 +10,7 @@ var (
 	ErrUserAlreadyExists = errors.New("user already exists")
 )
 
-type Repository interface {
+type Userepository interface {
 	GetUserById(id int) (*User, error)
 	CreateUser(user *User) error
 	DeleteUser(id int) error
@@ -21,7 +21,7 @@ type userRepository struct {
 	db *sql.DB
 }
 
-func NewUserRepository(db *sql.DB) Repository {
+func NewUserRepository(db *sql.DB) Userepository {
 	return &userRepository{db: db}
 }
 
