@@ -12,16 +12,18 @@ type UserHandler struct {
 	service UserService
 }
 
-func NewUserHandler(service UserService) *UserHandler {
-	return &UserHandler{service: service}
+func NewUserHandler() *UserHandler {
+	userRepo := NewUserRepository()
+	userService := NewUserService(userRepo)
+	return &UserHandler{service: userService}
 }
 
 // RegisterRoutes registers user routes to the Echo group.
-func (h *UserHandler) RegisterRoutes(g *echo.Echo) {
-	g.GET("/api/v1/users/:id", h.GetUser)
-	g.POST("/api/v1/users", h.CreateUser)
-	g.PUT("/api/v1/users/:id", h.UpdateUser)
-	g.DELETE("/api/v1/users/:id", h.DeleteUser)
+func (h *UserHandler) RegisterRoutes(e *echo.Echo) {
+	e.GET("/api/v1/users/:id", h.GetUser)
+	e.POST("/api/v1/users", h.CreateUser)
+	e.PUT("/api/v1/users/:id", h.UpdateUser)
+	e.DELETE("/api/v1/users/:id", h.DeleteUser)
 }
 
 func (h *UserHandler) GetUser(c echo.Context) error {

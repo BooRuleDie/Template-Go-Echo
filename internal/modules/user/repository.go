@@ -7,25 +7,19 @@ var (
 	ErrUserAlreadyExists = errors.New("user already exists")
 )
 
-type User struct {
-	ID    int
-	Name  string
-	Email string
-}
-
-type UserRepository interface {
+type Repository interface {
 	GetUserById(id int) (*User, error)
 	CreateUser(user *User) error
 	DeleteUser(id int) error
 	UpdateUser(user *User) error
 }
 
-type repository struct {
+type userRepository struct {
 	users map[int]*User
 }
 
-func NewRepository() UserRepository {
-	return &repository{
+func NewUserRepository() Repository {
+	return &userRepository{
 		users: map[int]*User{
 			1: {ID: 1, Name: "Alice", Email: "alice@example.com"},
 			2: {ID: 2, Name: "Bob", Email: "bob@example.com"},
@@ -34,7 +28,7 @@ func NewRepository() UserRepository {
 	}
 }
 
-func (r *repository) GetUserById(id int) (*User, error) {
+func (r *userRepository) GetUserById(id int) (*User, error) {
 	user, exists := r.users[id]
 	if !exists {
 		return nil, ErrUserNotFound
@@ -42,7 +36,7 @@ func (r *repository) GetUserById(id int) (*User, error) {
 	return user, nil
 }
 
-func (r *repository) CreateUser(user *User) error {
+func (r *userRepository) CreateUser(user *User) error {
 	if _, exists := r.users[user.ID]; exists {
 		return ErrUserAlreadyExists
 	}
@@ -50,7 +44,7 @@ func (r *repository) CreateUser(user *User) error {
 	return nil
 }
 
-func (r *repository) DeleteUser(id int) error {
+func (r *userRepository) DeleteUser(id int) error {
 	if _, exists := r.users[id]; !exists {
 		return ErrUserNotFound
 	}
@@ -58,7 +52,7 @@ func (r *repository) DeleteUser(id int) error {
 	return nil
 }
 
-func (r *repository) UpdateUser(user *User) error {
+func (r *userRepository) UpdateUser(user *User) error {
 	if _, exists := r.users[user.ID]; !exists {
 		return ErrUserNotFound
 	}

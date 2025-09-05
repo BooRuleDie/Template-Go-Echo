@@ -1,7 +1,7 @@
 package config
 
 type QueueConfig struct {
-	Redis    *RedisConfig
+	Redis *RedisConfig
 }
 
 func newQueueConfig() *QueueConfig {

@@ -8,10 +8,10 @@ type UserService interface {
 }
 
 type userService struct {
-	repo UserRepository
+	repo Repository
 }
 
-func NewUserService(repo UserRepository) UserService {
+func NewUserService(repo Repository) UserService {
 	return &userService{repo: repo}
 }
 
