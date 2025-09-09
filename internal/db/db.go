@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	config "go-echo-template/internal/config"
@@ -30,4 +31,20 @@ func New(DBConfig *config.DBConfig) (*sql.DB, error) {
 	}
 
 	return db, nil
+}
+
+func WithTx(db *sql.DB, ctx context.Context, fn func(*sql.Tx) error) error {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	if err := fn(tx); err != nil {
+		if rbErr := tx.Rollback(); rbErr != nil {
+			return errors.New("transaction error: " + err.Error() + ", rollback error: " + rbErr.Error())
+		}
+		return err
+	}
+
+	return tx.Commit()
 }

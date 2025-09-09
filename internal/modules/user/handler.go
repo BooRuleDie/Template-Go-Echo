@@ -2,6 +2,7 @@ package user
 
 import (
 	"database/sql"
+	"go-echo-template/internal/shared/response"
 	"net/http"
 	"strconv"
 
@@ -10,12 +11,12 @@ import (
 
 // UserHandler handles HTTP requests for user operations.
 type UserHandler struct {
-	service UserService
+	service userService
 }
 
 func NewUserHandler(db *sql.DB) *UserHandler {
-	userRepo := NewUserRepository(db)
-	userService := NewUserService(userRepo)
+	userRepo := newUserRepository(db)
+	userService := newUserService(userRepo)
 	return &UserHandler{service: userService}
 }
 
@@ -30,64 +31,52 @@ func (h *UserHandler) RegisterRoutes(e *echo.Echo) {
 func (h *UserHandler) GetUser(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid id"})
+		return errInvalidID
 	}
-	user, err := h.service.GetUser(id)
+	user, err := h.service.getUser(id)
 	if err != nil {
-		if err == ErrUserNotFound {
-			return c.JSON(http.StatusNotFound, map[string]string{"error": "user not found"})
-		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "internal server error"})
+		return err
 	}
-	return c.JSON(http.StatusOK, user)
+	return response.NewSuccessResponse(c, http.StatusOK, user)
 }
 
 func (h *UserHandler) CreateUser(c echo.Context) error {
 	var user User
 	if err := c.Bind(&user); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request payload"})
+		return errInvalidID
 	}
-	err := h.service.CreateUser(&user)
+	err := h.service.createUser(&user)
 	if err != nil {
-		if err == ErrUserAlreadyExists {
-			return c.JSON(http.StatusConflict, map[string]string{"error": "user already exists"})
-		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "internal server error"})
+		return err
 	}
-	return c.JSON(http.StatusCreated, user)
+	return response.NewSuccessResponse(c, http.StatusCreated, nil)
 }
 
 func (h *UserHandler) UpdateUser(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid id"})
+		return errInvalidID
 	}
 	var user User
 	if err := c.Bind(&user); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request payload"})
+		return errInvalidRequestPayload
 	}
 	user.ID = id // Ensure id from URL is used.
-	err = h.service.UpdateUser(&user)
+	err = h.service.updateUser(&user)
 	if err != nil {
-		if err == ErrUserNotFound {
-			return c.JSON(http.StatusNotFound, map[string]string{"error": "user not found"})
-		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "internal server error"})
+		return err
 	}
-	return c.JSON(http.StatusOK, user)
+	return response.NewSuccessResponse(c, http.StatusOK, nil)
 }
 
 func (h *UserHandler) DeleteUser(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid id"})
+		return errInvalidID
 	}
-	err = h.service.DeleteUser(id)
+	err = h.service.deleteUser(id)
 	if err != nil {
-		if err == ErrUserNotFound {
-			return c.JSON(http.StatusNotFound, map[string]string{"error": "user not found"})
-		}
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "internal server error"})
+		return err
 	}
-	return c.NoContent(http.StatusNoContent)
+	return response.NewSuccessResponse(c, http.StatusNoContent, nil)
 }

@@ -2,46 +2,40 @@ package user
 
 import (
 	"database/sql"
-	"errors"
 )
 
-var (
-	ErrUserNotFound      = errors.New("user not found")
-	ErrUserAlreadyExists = errors.New("user already exists")
-)
-
-type Userepository interface {
-	GetUserById(id int) (*User, error)
-	CreateUser(user *User) error
-	DeleteUser(id int) error
-	UpdateUser(user *User) error
+type userRepository interface {
+	getUserById(id int) (*User, error)
+	createUser(user *User) error
+	deleteUser(id int) error
+	updateUser(user *User) error
 }
 
-type userRepository struct {
+type repository struct {
 	db *sql.DB
 }
 
-func NewUserRepository(db *sql.DB) Userepository {
-	return &userRepository{db: db}
+func newUserRepository(db *sql.DB) userRepository {
+	return &repository{db: db}
 }
 
-func (r *userRepository) GetUserById(id int) (*User, error) {
+func (r *repository) getUserById(id int) (*User, error) {
 	query := `SELECT id, name, email FROM users WHERE id = $1`
 
-	user := new(User)
+	var user User
 	row := r.db.QueryRow(query, id)
 	err := row.Scan(&user.ID, &user.Name, &user.Email)
 	if err == sql.ErrNoRows {
-		return nil, ErrUserNotFound
+		return nil, errUserNotFound.WithArgs(id)
 	}
 	if err != nil {
 		return nil, err
 	}
-	return user, nil
+	return &user, nil
 }
 
-func (r *userRepository) CreateUser(user *User) error {
-	query := `INSERT INTO users (name, email) VALUES ($1, $2, $3)`
+func (r *repository) createUser(user *User) error {
+	query := `INSERT INTO users (name, email) VALUES ($1, $2);`
 	_, err := r.db.Exec(
 		query,
 		user.Name, user.Email,
@@ -50,14 +44,14 @@ func (r *userRepository) CreateUser(user *User) error {
 	return err
 }
 
-func (r *userRepository) DeleteUser(id int) error {
+func (r *repository) deleteUser(id int) error {
 	query := `DELETE FROM users WHERE id = ?`
 	_, err := r.db.Exec(query, id)
 
 	return err
 }
 
-func (r *userRepository) UpdateUser(user *User) error {
+func (r *repository) updateUser(user *User) error {
 	query := `UPDATE users SET name = $1, email = $2 WHERE id = $3`
 	result, err := r.db.Exec(query, user.Name, user.Email, user.ID)
 	if err != nil {
@@ -68,7 +62,7 @@ func (r *userRepository) UpdateUser(user *User) error {
 		return err
 	}
 	if rowsAffected == 0 {
-		return ErrUserNotFound
+		return errUserNotFound.WithArgs(user.ID)
 	}
 	return nil
 }

@@ -1,32 +1,32 @@
 package user
 
-type UserService interface {
-	GetUser(id int) (*User, error)
-	CreateUser(user *User) error
-	DeleteUser(id int) error
-	UpdateUser(user *User) error
+type userService interface {
+	getUser(id int) (*User, error)
+	createUser(user *User) error
+	deleteUser(id int) error
+	updateUser(user *User) error
 }
 
-type userService struct {
-	repo Userepository
+type service struct {
+	repo userRepository
 }
 
-func NewUserService(repo Userepository) UserService {
-	return &userService{repo: repo}
+func newUserService(repo userRepository) userService {
+	return &service{repo: repo}
 }
 
-func (s *userService) GetUser(id int) (*User, error) {
-	return s.repo.GetUserById(id)
+func (s *service) getUser(id int) (*User, error) {
+	return s.repo.getUserById(id)
 }
 
-func (s *userService) CreateUser(user *User) error {
-	return s.repo.CreateUser(user)
+func (s *service) createUser(user *User) error {
+	return s.repo.createUser(user)
 }
 
-func (s *userService) DeleteUser(id int) error {
-	return s.repo.DeleteUser(id)
+func (s *service) deleteUser(id int) error {
+	return s.repo.deleteUser(id)
 }
 
-func (s *userService) UpdateUser(user *User) error {
-	return s.repo.UpdateUser(user)
+func (s *service) updateUser(user *User) error {
+	return s.repo.updateUser(user)
 }
