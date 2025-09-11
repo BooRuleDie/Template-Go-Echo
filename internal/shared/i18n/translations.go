@@ -8,8 +8,35 @@ type Translation struct {
 	Messages   map[Locale]string
 }
 
-// Translation store: Code -> Locale -> Message
+// Translation codes follow this format:
+// [CATEGORY][:MODULE]_[MESSAGE]
+//
+// CATEGORY can be one of:
+//   - ERR:      Error messages
+//   - VAL:      Validation errors
+//   - UI:       User interface strings
+//   - SUC:      Success messages
+//
+// The MODULE part is required for ERR, VAL, and SUC, but optional for UI codes.
+// MODULE helps categorize translations by application domain, such as USER, AUTH, etc.
+//
+// Examples:
+//   Error:            "ERR:USER_NOT_FOUND"
+//   Validation Error: "VAL:FIELD_REQUIRED"
+//   UI (with module): "UI:BUTTON_SAVE"
+//   UI (no module):   "UI:LOADING"
+//   Success:          "SUC:AUTH_LOGIN"
+
+// Translation store: Code -> Translation -> Locale -> Message
 var Translations = map[string]Translation{
+	// ========== USER MODULE ==========
+	"SUC:USER_CREATED": {
+		IsInternal: true,
+		Messages: map[Locale]string{
+			EN_US: "User created successfully",
+			TR_TR: "Kullanıcı başarıyla oluşturuldu",
+		},
+	},
 	"ERR:USER_NOT_FOUND": {
 		IsInternal: true,
 		Messages: map[Locale]string{
@@ -24,20 +51,22 @@ var Translations = map[string]Translation{
 			TR_TR: "Kullanıcı kaydı yapılmış",
 		},
 	},
-	"ERR:INVALID_ID": {
+	"ERR:USER_INVALID_ID": {
 		IsInternal: true,
 		Messages: map[Locale]string{
 			EN_US: "Invalid user ID",
 			TR_TR: "Geçersiz kullanıcı ID'si",
 		},
 	},
-	"ERR:INVALID_REQUEST_PAYLOAD": {
+	"ERR:USER_INVALID_REQUEST_PAYLOAD": {
 		IsInternal: true,
 		Messages: map[Locale]string{
 			EN_US: "Invalid request payload",
 			TR_TR: "Geçersiz istek verisi",
 		},
 	},
+
+	// ========== GENERIC ERROR MESSAGES ==========
 	"ERR:INTERNAL_SERVER_ERROR": {
 		IsInternal: true,
 		Messages: map[Locale]string{

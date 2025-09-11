@@ -6,42 +6,24 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// Standard Success Response
-type successResponse struct {
-	IsError bool `json:"isError"`
-	Data    any  `json:"data,omitempty"`
-}
-
-func NewSuccessResponse(c echo.Context, status int, data any) error {
-	resp := successResponse{
-		IsError: false,
-		Data:    data,
-	}
-	return c.JSON(status, resp)
-}
-
 // Standard Error Response
 type errResponse struct {
 	IsError bool   `json:"isError"`
 	Code    string `json:"code"`
+	Status  int    `json:"status"`
 	Message string `json:"message"`
 }
 
 // Custom Error
 type CustomErr struct {
-	Code       string
-	HTTPStatus int
-	Args       []any
+	Code   string
+	Status int
+	Args   []any
 }
 
 // Satisfies the error interface
 func (ce *CustomErr) Error() string {
 	return ce.Code
-}
-
-// Format localized error message
-func (ce *CustomErr) GetMessage(locale i18n.Locale) string {
-	return i18n.Translate(ce.Code, locale, ce.Args...)
 }
 
 // Populate args for message with dynamic values
@@ -58,10 +40,11 @@ func HTTPErrHandler(err error, c echo.Context) {
 		resp := errResponse{
 			IsError: true,
 			Code:    ce.Code,
-			Message: ce.GetMessage(locale),
+			Status:  ce.Status,
+			Message: i18n.Translate(ce.Code, locale, ce.Args...),
 		}
 		// TODO: log the error after log implementation
-		c.JSON(ce.HTTPStatus, resp)
+		c.JSON(ce.Status, resp)
 		return
 	}
 
@@ -69,6 +52,7 @@ func HTTPErrHandler(err error, c echo.Context) {
 	resp := errResponse{
 		IsError: true,
 		Code:    "ERR:INTERNAL_SERVER_ERROR",
+		Status:  500,
 		Message: i18n.Translate("ERR:INTERNAL_SERVER_ERROR", locale),
 	}
 	// TODO: log the error after log implementation

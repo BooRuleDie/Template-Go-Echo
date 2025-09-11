@@ -7,19 +7,19 @@ import (
 
 var (
 	errUserNotFound = &response.CustomErr{
-		Code:       "ERR:USER_NOT_FOUND",
-		HTTPStatus: http.StatusNotFound,
+		Code:   "ERR:USER_NOT_FOUND",
+		Status: http.StatusNotFound,
 	}
 	errUserAlreadyExists = &response.CustomErr{
-		Code:       "ERR:USER_ALREADY_EXISTS",
-		HTTPStatus: http.StatusConflict,
+		Code:   "ERR:USER_ALREADY_EXISTS",
+		Status: http.StatusConflict,
 	}
 	errInvalidID = &response.CustomErr{
-		Code:       "ERR:INVALID_ID",
-		HTTPStatus: http.StatusBadRequest,
+		Code:   "ERR:USER_INVALID_ID",
+		Status: http.StatusBadRequest,
 	}
 	errInvalidRequestPayload = &response.CustomErr{
-		Code:       "ERR:INVALID_REQUEST_PAYLOAD",
-		HTTPStatus: http.StatusBadRequest,
+		Code:   "ERR:USER_INVALID_REQUEST_PAYLOAD",
+		Status: http.StatusBadRequest,
 	}
 )

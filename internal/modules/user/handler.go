@@ -37,19 +37,19 @@ func (h *UserHandler) GetUser(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return response.NewSuccessResponse(c, http.StatusOK, user)
+	return response.Success(c, http.StatusOK).WithData(user).Send()
 }
 
 func (h *UserHandler) CreateUser(c echo.Context) error {
 	var user User
 	if err := c.Bind(&user); err != nil {
-		return errInvalidID
+		return errInvalidRequestPayload
 	}
 	err := h.service.createUser(&user)
 	if err != nil {
 		return err
 	}
-	return response.NewSuccessResponse(c, http.StatusCreated, nil)
+	return response.Success(c, http.StatusCreated).WithMessage("SUC:USER_CREATED").Send()
 }
 
 func (h *UserHandler) UpdateUser(c echo.Context) error {
@@ -66,7 +66,7 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return response.NewSuccessResponse(c, http.StatusOK, nil)
+	return response.Success(c, http.StatusOK).Send()
 }
 
 func (h *UserHandler) DeleteUser(c echo.Context) error {
@@ -78,5 +78,5 @@ func (h *UserHandler) DeleteUser(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return response.NewSuccessResponse(c, http.StatusNoContent, nil)
+	return response.Success(c, http.StatusNoContent).Send()
 }
