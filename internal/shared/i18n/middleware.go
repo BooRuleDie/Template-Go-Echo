@@ -48,13 +48,3 @@ func GetLocaleFromContext(c echo.Context) Locale {
 		return DefaultLocale
 	}
 }
-
-// Make sure only allowed locales are returned
-func validateLocale(locale Locale) Locale {
-	switch locale {
-	case EN_US, TR_TR:
-		return locale
-	default:
-		return DefaultLocale
-	}
-}

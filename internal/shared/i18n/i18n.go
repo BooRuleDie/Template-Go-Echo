@@ -37,3 +37,13 @@ func Translate(code string, locale Locale, args ...any) string {
 	// ultimate fallback: return code
 	return code
 }
+
+// Make sure only allowed locales are returned
+func validateLocale(locale Locale) Locale {
+	switch locale {
+	case EN_US, TR_TR:
+		return locale
+	default:
+		return DefaultLocale
+	}
+}
