@@ -13,10 +13,7 @@ func LocaleMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cookie, err := c.Cookie(localeCookieName)
 		var locale Locale
-		if err == nil && cookie != nil {
-			// Use existing cookie
-			locale = validateLocale(Locale(cookie.Value))
-		} else {
+		if err != nil || cookie == nil {
 			// Set default locale cookie if not existed
 			locale = DefaultLocale
 			cookie := &http.Cookie{
@@ -26,6 +23,9 @@ func LocaleMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				HttpOnly: false, // There is no harm JS to access to that cookie
 			}
 			c.SetCookie(cookie)
+		} else {
+			// Use existing cookie
+			locale = validateLocale(Locale(cookie.Value))
 		}
 		c.Set(localeCookieName, locale)
 		return next(c)

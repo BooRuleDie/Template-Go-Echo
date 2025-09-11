@@ -15,7 +15,7 @@ tidy:
 
 # Run the application using air
 .PHONY: run
-run:
+run: infra-up
 	@air
 
 # Clean the test cache

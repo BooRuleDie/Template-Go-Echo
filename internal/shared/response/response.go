@@ -9,7 +9,7 @@ import (
 // Standard Success Response
 type successResponse struct {
 	IsError bool `json:"isError"`
-	Data    any  `json:"data"`
+	Data    any  `json:"data,omitempty"`
 }
 
 func NewSuccessResponse(c echo.Context, status int, data any) error {
@@ -45,7 +45,7 @@ func (ce *CustomErr) GetMessage(locale i18n.Locale) string {
 }
 
 // Populate args for message with dynamic values
-func (ce *CustomErr) WithArgs(args ...any) error {
+func (ce *CustomErr) WithArgs(args ...any) *CustomErr {
 	ce.Args = args
 	return ce
 }
@@ -60,7 +60,8 @@ func HTTPErrHandler(err error, c echo.Context) {
 			Code:    ce.Code,
 			Message: ce.GetMessage(locale),
 		}
-		_ = c.JSON(ce.HTTPStatus, resp)
+		// TODO: log the error after log implementation
+		c.JSON(ce.HTTPStatus, resp)
 		return
 	}
 
@@ -70,5 +71,6 @@ func HTTPErrHandler(err error, c echo.Context) {
 		Code:    "ERR:INTERNAL_SERVER_ERROR",
 		Message: i18n.Translate("ERR:INTERNAL_SERVER_ERROR", locale),
 	}
-	_ = c.JSON(500, resp)
+	// TODO: log the error after log implementation
+	c.JSON(500, resp)
 }
