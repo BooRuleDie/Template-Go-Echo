@@ -2,13 +2,14 @@ package user
 
 import (
 	"database/sql"
+	"go-echo-template/internal/shared/models"
 )
 
 type userRepository interface {
-	getUserById(id int) (*User, error)
-	createUser(user *User) error
+	getUserById(id int) (*models.User, error)
+	createUser(*CreateUserRequest) error
 	deleteUser(id int) error
-	updateUser(user *User) error
+	updateUser(user *models.User) error
 }
 
 type repository struct {
@@ -19,10 +20,10 @@ func newUserRepository(db *sql.DB) userRepository {
 	return &repository{db: db}
 }
 
-func (r *repository) getUserById(id int) (*User, error) {
+func (r *repository) getUserById(id int) (*models.User, error) {
 	query := `SELECT id, name, email FROM users WHERE id = $1`
 
-	var user User
+	var user models.User
 	row := r.db.QueryRow(query, id)
 	err := row.Scan(&user.ID, &user.Name, &user.Email)
 	if err == sql.ErrNoRows {
@@ -34,11 +35,11 @@ func (r *repository) getUserById(id int) (*User, error) {
 	return &user, nil
 }
 
-func (r *repository) createUser(user *User) error {
+func (r *repository) createUser(cur *CreateUserRequest) error {
 	query := `INSERT INTO users (name, email) VALUES ($1, $2);`
 	_, err := r.db.Exec(
 		query,
-		user.Name, user.Email,
+		cur.Name, cur.Email,
 	)
 
 	return err
@@ -51,7 +52,7 @@ func (r *repository) deleteUser(id int) error {
 	return err
 }
 
-func (r *repository) updateUser(user *User) error {
+func (r *repository) updateUser(user *models.User) error {
 	query := `UPDATE users SET name = $1, email = $2 WHERE id = $3`
 	result, err := r.db.Exec(query, user.Name, user.Email, user.ID)
 	if err != nil {

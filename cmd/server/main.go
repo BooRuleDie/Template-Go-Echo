@@ -9,6 +9,7 @@ import (
 	"go-echo-template/internal/modules/user"
 	"go-echo-template/internal/shared/i18n"
 	"go-echo-template/internal/shared/response"
+	"go-echo-template/internal/shared/validation"
 )
 
 func main() {
@@ -17,6 +18,9 @@ func main() {
 
 	// Create Echo instance
 	e := echo.New()
+
+	// Use the custom validator
+	e.Validator = validation.NewValidator()
 
 	// Use i18n locale middleware
 	e.Use(i18n.LocaleMiddleware)

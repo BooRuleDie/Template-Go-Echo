@@ -2,6 +2,7 @@ package user
 
 import (
 	"database/sql"
+	"go-echo-template/internal/shared/models"
 	"go-echo-template/internal/shared/response"
 	"net/http"
 	"strconv"
@@ -41,11 +42,15 @@ func (h *UserHandler) GetUser(c echo.Context) error {
 }
 
 func (h *UserHandler) CreateUser(c echo.Context) error {
-	var user User
-	if err := c.Bind(&user); err != nil {
+	cur := new(CreateUserRequest)
+	if err := c.Bind(cur); err != nil {
 		return errInvalidRequestPayload
 	}
-	err := h.service.createUser(&user)
+	if err := c.Validate(cur); err != nil {
+		return err
+	}
+
+	err := h.service.createUser(cur)
 	if err != nil {
 		return err
 	}
@@ -57,7 +62,7 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 	if err != nil {
 		return errInvalidID
 	}
-	var user User
+	var user models.User
 	if err := c.Bind(&user); err != nil {
 		return errInvalidRequestPayload
 	}
