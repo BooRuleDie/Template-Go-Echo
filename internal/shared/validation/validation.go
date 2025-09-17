@@ -51,29 +51,23 @@ func (cv *CustomValidator) Validate(i any) error {
 	return cv.validator.Struct(i)
 }
 
-var TagHandlers = map[string]func(fe validator.FieldError, fieldName string) (string, []any){
-	"required": func(fe validator.FieldError, fieldName string) (string, []any) {
+func TagHandler(fe validator.FieldError, fieldName string) (string, []any) {
+	switch fe.Tag() {
+	case "required":
 		return "VAL:REQUIRED", []any{fieldName}
-	},
-	"email": func(fe validator.FieldError, fieldName string) (string, []any) {
+	case "email":
 		return "VAL:EMAIL", []any{fieldName}
-	},
-	"phone": func(fe validator.FieldError, fieldName string) (string, []any) {
+	case "phone":
 		return "VAL:PHONE", []any{fieldName}
-	},
-	"alpha": func(fe validator.FieldError, fieldName string) (string, []any) {
+	case "alpha":
 		return "VAL:ALPHA", []any{fieldName}
-	},
-	"alphanum": func(fe validator.FieldError, fieldName string) (string, []any) {
+	case "alphanum":
 		return "VAL:ALPHANUM", []any{fieldName}
-	},
-	"contains": func(fe validator.FieldError, fieldName string) (string, []any) {
+	case "contains":
 		return "VAL:CONTAINS", []any{fieldName, fe.Param()}
-	},
-	"oneof": func(fe validator.FieldError, fieldName string) (string, []any) {
+	case "oneof":
 		return "VAL:ONEOF", []any{fieldName, fe.Param()}
-	},
-	"gte": func(fe validator.FieldError, fieldName string) (string, []any) {
+	case "gte":
 		switch fe.Kind() {
 		case reflect.String:
 			return "VAL:MIN_STRING", []any{fieldName, fe.Param()}
@@ -82,8 +76,7 @@ var TagHandlers = map[string]func(fe validator.FieldError, fieldName string) (st
 		default:
 			return "VAL:GTE_NUMBER", []any{fieldName, fe.Param()}
 		}
-	},
-	"lte": func(fe validator.FieldError, fieldName string) (string, []any) {
+	case "lte":
 		switch fe.Kind() {
 		case reflect.String:
 			return "VAL:MAX_STRING", []any{fieldName, fe.Param()}
@@ -92,8 +85,7 @@ var TagHandlers = map[string]func(fe validator.FieldError, fieldName string) (st
 		default:
 			return "VAL:LTE_NUMBER", []any{fieldName, fe.Param()}
 		}
-	},
-	"min": func(fe validator.FieldError, fieldName string) (string, []any) {
+	case "min":
 		switch fe.Kind() {
 		case reflect.String:
 			return "VAL:MIN_STRING", []any{fieldName, fe.Param()}
@@ -102,8 +94,7 @@ var TagHandlers = map[string]func(fe validator.FieldError, fieldName string) (st
 		default:
 			return "VAL:MIN_NUMBER", []any{fieldName, fe.Param()}
 		}
-	},
-	"max": func(fe validator.FieldError, fieldName string) (string, []any) {
+	case "max":
 		switch fe.Kind() {
 		case reflect.String:
 			return "VAL:MAX_STRING", []any{fieldName, fe.Param()}
@@ -112,8 +103,7 @@ var TagHandlers = map[string]func(fe validator.FieldError, fieldName string) (st
 		default:
 			return "VAL:MAX_NUMBER", []any{fieldName, fe.Param()}
 		}
-	},
-	"len": func(fe validator.FieldError, fieldName string) (string, []any) {
+	case "len":
 		switch fe.Kind() {
 		case reflect.String:
 			return "VAL:LEN_STRING", []any{fieldName, fe.Param()}
@@ -122,5 +112,7 @@ var TagHandlers = map[string]func(fe validator.FieldError, fieldName string) (st
 		default:
 			return "VAL:LEN_NUMBER", []any{fieldName, fe.Param()}
 		}
-	},
+	default:
+		return "VAL:UNKNOWN", []any{fieldName, fe.Tag()}
+	}
 }

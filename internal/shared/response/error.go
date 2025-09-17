@@ -48,28 +48,18 @@ func HTTPErrHandler(err error, c echo.Context) {
 	if errors.As(err, &valErrs) {
 		var fieldErrs []validation.CustomFieldErr
 		for _, fe := range valErrs {
-			jsonField := strings.ToLower(fe.Field())
 			fieldKey := fmt.Sprintf("FIELD:%s", strings.ToUpper(fe.Field()))
 			translatedField := i18n.Translate(fieldKey, locale)
 			userInput := fmt.Sprintf("%v", fe.Value())
+			jsonField := strings.ToLower(fe.Field())
 
-			if handler, ok := validation.TagHandlers[fe.Tag()]; ok {
-				code, args := handler(fe, translatedField)
-				msg := i18n.Translate(code, locale, args...)
-				fieldErrs = append(fieldErrs, validation.CustomFieldErr{
-					Input:   userInput,
-					Field:   jsonField,
-					Message: msg,
-				})
-			} else {
-				// Fallback for unhandled validation tags
-				fallbackMsg := fmt.Sprintf("i18n message translation failed for this unhandled tag: %s", fe.Tag())
-				fieldErrs = append(fieldErrs, validation.CustomFieldErr{
-					Input:   userInput,
-					Field:   jsonField,
-					Message: fallbackMsg,
-				})
-			}
+			valKey, args := validation.TagHandler(fe, translatedField)
+			msg := i18n.Translate(valKey, locale, args...)
+			fieldErrs = append(fieldErrs, validation.CustomFieldErr{
+				Input:   userInput,
+				Field:   jsonField,
+				Message: msg,
+			})
 		}
 
 		resp := errResponse{
