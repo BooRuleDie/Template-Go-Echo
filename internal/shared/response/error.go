@@ -1,7 +1,6 @@
 package response
 
 import (
-	"errors"
 	"fmt"
 	"go-echo-template/internal/shared/i18n"
 	"go-echo-template/internal/shared/validation"
@@ -44,8 +43,7 @@ func HTTPErrHandler(err error, c echo.Context) {
 	locale := i18n.GetLocaleFromContext(c)
 
 	// 1) Handle validation errors
-	var valErrs validator.ValidationErrors
-	if errors.As(err, &valErrs) {
+	if valErrs, ok := err.(validator.ValidationErrors); ok {
 		var fieldErrs []validation.CustomFieldErr
 		for _, fe := range valErrs {
 			fieldKey := fmt.Sprintf("FIELD:%s", strings.ToUpper(fe.Field()))
