@@ -3,7 +3,6 @@ package response
 import (
 	"fmt"
 	"go-echo-template/internal/shared/i18n"
-	"go-echo-template/internal/shared/validation"
 	"net/http"
 	"strings"
 
@@ -13,11 +12,11 @@ import (
 
 // Standard Error Response
 type errResponse struct {
-	IsError          bool                        `json:"isError"`
-	Code             string                      `json:"code"`
-	Status           int                         `json:"status"`
-	Message          string                      `json:"message"`
-	ValidationErrors []validation.CustomFieldErr `json:"validationErrors,omitempty"`
+	IsError          bool             `json:"isError"`
+	Code             string           `json:"code"`
+	Status           int              `json:"status"`
+	Message          string           `json:"message"`
+	ValidationErrors []CustomFieldErr `json:"validationErrors,omitempty"`
 }
 
 // Custom Error
@@ -44,16 +43,16 @@ func HTTPErrHandler(err error, c echo.Context) {
 
 	// 1) Handle validation errors
 	if valErrs, ok := err.(validator.ValidationErrors); ok {
-		var fieldErrs []validation.CustomFieldErr
+		var fieldErrs []CustomFieldErr
 		for _, fe := range valErrs {
 			fieldKey := fmt.Sprintf("FIELD:%s", strings.ToUpper(fe.Field()))
 			translatedField := i18n.Translate(fieldKey, locale)
 			userInput := fmt.Sprintf("%v", fe.Value())
 			jsonField := strings.ToLower(fe.Field())
 
-			valKey, args := validation.TagHandler(fe, translatedField)
+			valKey, args := TagHandler(fe, translatedField)
 			msg := i18n.Translate(valKey, locale, args...)
-			fieldErrs = append(fieldErrs, validation.CustomFieldErr{
+			fieldErrs = append(fieldErrs, CustomFieldErr{
 				Input:   userInput,
 				Field:   jsonField,
 				Message: msg,
