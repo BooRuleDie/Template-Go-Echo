@@ -2,7 +2,6 @@ package user
 
 import (
 	"database/sql"
-	"go-echo-template/internal/shared/models"
 	"go-echo-template/internal/shared/response"
 	"net/http"
 	"strconv"
@@ -30,18 +29,34 @@ func (h *UserHandler) RegisterRoutes(e *echo.Echo) {
 }
 
 func (h *UserHandler) GetUser(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
+	ctx := c.Request().Context()
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return errInvalidID
 	}
-	user, err := h.service.getUser(id)
+	user, err := h.service.getUser(ctx, id)
 	if err != nil {
 		return err
 	}
-	return response.Success(c, http.StatusOK).WithData(user).Send()
+	
+	getUserResp := &GetUserResponse{
+		ID:        user.ID,
+		Name:      user.Name,
+		Email:     user.Email,
+		Phone:     nil,
+		Role:      user.Role,
+		CreatedAt: user.CreatedAt.Format("2006-01-02 15:04:05"),
+		UpdatedAt: user.UpdatedAt.Format("2006-01-02 15:04:05"),
+	}
+	if user.Phone.Valid {
+		getUserResp.Phone = &user.Phone.String
+	}
+
+	return response.Success(c, http.StatusOK).WithData(getUserResp).Send()
 }
 
 func (h *UserHandler) CreateUser(c echo.Context) error {
+	ctx := c.Request().Context()
 	cur := new(CreateUserRequest)
 	if err := c.Bind(cur); err != nil {
 		return errInvalidRequestPayload
@@ -50,7 +65,7 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 		return err
 	}
 
-	err := h.service.createUser(cur)
+	err := h.service.createUser(ctx, cur)
 	if err != nil {
 		return err
 	}
@@ -58,16 +73,18 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 }
 
 func (h *UserHandler) UpdateUser(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
+	ctx := c.Request().Context()
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return errInvalidID
 	}
-	var user models.User
-	if err := c.Bind(&user); err != nil {
+	uur := new(UpdateUserRequest)
+	if err := c.Bind(&uur); err != nil {
 		return errInvalidRequestPayload
 	}
-	user.ID = id // Ensure id from URL is used.
-	err = h.service.updateUser(&user)
+
+	uur.ID = id // Ensure id from URL is used.
+	err = h.service.updateUser(ctx, uur)
 	if err != nil {
 		return err
 	}
@@ -75,11 +92,12 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 }
 
 func (h *UserHandler) DeleteUser(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
+	ctx := c.Request().Context()
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return errInvalidID
 	}
-	err = h.service.deleteUser(id)
+	err = h.service.deleteUser(ctx, id)
 	if err != nil {
 		return err
 	}

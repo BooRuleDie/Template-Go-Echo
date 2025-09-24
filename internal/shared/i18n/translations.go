@@ -116,6 +116,13 @@ var Translations = map[string]Translation{
 			TR_TR: "%v geçerli bir Türk GSM numarası olmalıdır (+905XXXXXXXXX)",
 		},
 	},
+	"VAL:PASSWORD": {
+		IsInternal: true,
+		Messages: map[Locale]string{
+			EN_US: "%v must be at least 8 characters long and include 1 uppercase letter, 1 lowercase letter, 1 digit, and 1 special character",
+			TR_TR: "%v en az 8 karakter olmalı, 1 büyük harf, 1 küçük harf, 1 rakam ve 1 özel karakter içermelidir",
+		},
+	},
 
 	// min / max / len -- string
 	"VAL:MIN_STRING": {

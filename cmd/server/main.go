@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/labstack/echo/v4"
 	_ "github.com/lib/pq"
 
@@ -12,6 +14,9 @@ import (
 )
 
 func main() {
+	// Create the Background Context
+	ctx := context.Background()
+
 	// Load configuration
 	cfg := config.Load()
 
@@ -28,7 +33,7 @@ func main() {
 	e.HTTPErrorHandler = response.HTTPErrHandler
 
 	// Connect to the PostgreSQL DB
-	DB, err := db.New(cfg.DB)
+	DB, err := db.NewPostgreSQL(ctx, cfg.DB)
 	if err != nil {
 		e.Logger.Fatalf("failed to initialize database: %v", err)
 	}

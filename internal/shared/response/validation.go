@@ -42,6 +42,36 @@ func NewValidator() *CustomValidator {
 		return true
 	})
 
+	// Add custom "password" validation for a strong password policy
+	// Policy: min 8 chars, at least 1 uppercase, 1 lowercase, 1 digit, 1 special char
+	v.RegisterValidation("password", func(fl validator.FieldLevel) bool {
+		val := fl.Field()
+		if val.Kind() != reflect.String {
+			return false
+		}
+		s := val.String()
+		if len(s) < 8 {
+			return false
+		}
+		hasUpper := false
+		hasLower := false
+		hasDigit := false
+		hasSpecial := false
+		for _, c := range s {
+			switch {
+			case c >= 'A' && c <= 'Z':
+				hasUpper = true
+			case c >= 'a' && c <= 'z':
+				hasLower = true
+			case c >= '0' && c <= '9':
+				hasDigit = true
+			case (c >= 33 && c <= 47) || (c >= 58 && c <= 64) || (c >= 91 && c <= 96) || (c >= 123 && c <= 126):
+				hasSpecial = true
+			}
+		}
+		return hasUpper && hasLower && hasDigit && hasSpecial
+	})
+
 	return &CustomValidator{
 		validator: v,
 	}
@@ -59,6 +89,8 @@ func TagHandler(fe validator.FieldError, fieldName string) (string, []any) {
 		return "VAL:EMAIL", []any{fieldName}
 	case "phone":
 		return "VAL:PHONE", []any{fieldName}
+	case "password":
+		return "VAL:PASSWORD", []any{fieldName}
 	case "alpha":
 		return "VAL:ALPHA", []any{fieldName}
 	case "alphanum":

@@ -48,13 +48,13 @@ func HTTPErrHandler(err error, c echo.Context) {
 			fieldKey := fmt.Sprintf("FIELD:%s", strings.ToUpper(fe.Field()))
 			translatedField := i18n.Translate(fieldKey, locale)
 			userInput := fmt.Sprintf("%v", fe.Value())
-			jsonField := strings.ToLower(fe.Field())
+			field := strings.ToLower(fe.Field()[:1]) + fe.Field()[1:]
 
 			valKey, args := TagHandler(fe, translatedField)
 			msg := i18n.Translate(valKey, locale, args...)
 			fieldErrs = append(fieldErrs, CustomFieldErr{
 				Input:   userInput,
-				Field:   jsonField,
+				Field:   field,
 				Message: msg,
 			})
 		}
@@ -92,5 +92,6 @@ func HTTPErrHandler(err error, c echo.Context) {
 		Message: i18n.Translate("ERR:INTERNAL_SERVER_ERROR", locale),
 	}
 	// TODO: log the error after log implementation
+	fmt.Printf("Internal server error: %v\n", err)
 	c.JSON(resp.Status, resp)
 }

@@ -3,13 +3,12 @@ package db
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"time"
 
 	config "go-echo-template/internal/config"
 )
 
-func New(DBConfig *config.DBConfig) (*sql.DB, error) {
+func NewPostgreSQL(ctx context.Context, DBConfig *config.DBConfig) (*sql.DB, error) {
 	db, err := sql.Open("postgres", DBConfig.GetConnectionString())
 	if err != nil {
 		return nil, err
@@ -22,7 +21,7 @@ func New(DBConfig *config.DBConfig) (*sql.DB, error) {
 
 	// if it takes more than 5 seconds to ping the
 	// database, cancel the context
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	err = db.PingContext(ctx)
@@ -31,20 +30,4 @@ func New(DBConfig *config.DBConfig) (*sql.DB, error) {
 	}
 
 	return db, nil
-}
-
-func WithTx(db *sql.DB, ctx context.Context, fn func(*sql.Tx) error) error {
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-
-	if err := fn(tx); err != nil {
-		if rbErr := tx.Rollback(); rbErr != nil {
-			return errors.New("transaction error: " + err.Error() + ", rollback error: " + rbErr.Error())
-		}
-		return err
-	}
-
-	return tx.Commit()
 }

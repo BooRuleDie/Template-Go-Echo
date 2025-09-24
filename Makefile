@@ -59,3 +59,13 @@ migrate-up:
 .PHONY: migrate-down
 migrate-down:
 	@goose -dir ./migrations postgres "postgres://$$DB_USER:$$DB_PASSWORD@$$DB_HOST:$$DB_PORT/$$DB_NAME?sslmode=$$DB_SSL_MODE" down
+
+# Install 'sqlc' code generation tool
+.PHONY: install-sqlc
+install-sqlc:
+	@go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+
+# Generate Go code from SQL queries
+.PHONY: sqlc
+sqlc:
+	@sqlc generate
