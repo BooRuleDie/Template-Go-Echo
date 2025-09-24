@@ -4,14 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"go-echo-template/internal/modules/user/sqlc"
-	constant "go-echo-template/internal/shared/const"
 )
 
 type userRepository interface {
 	getUserById(ctx context.Context, id int64) (*sqlc.User, error)
-	createUser(ctx context.Context, cur *CreateUserRequest) (int64, error)
+	createUser(ctx context.Context, params sqlc.CreateUserParams) (int64, error)
 	deleteUser(ctx context.Context, id int64) error
-	updateUser(ctx context.Context, uur *UpdateUserRequest) error
+	updateUser(ctx context.Context, params sqlc.UpdateUserParams) error
 }
 
 type repository struct {
@@ -44,47 +43,19 @@ func (r *repository) getUserById(ctx context.Context, id int64) (*sqlc.User, err
 	}, nil
 }
 
-func (r *repository) createUser(ctx context.Context, cur *CreateUserRequest) (int64, error) {
-	var phone sql.NullString
-	if cur.Phone != nil {
-		phone.Valid = true
-		phone.String = *cur.Phone
-	}
-
-	password, err := cur.HashPassword()
-	if err != nil {
-		return 0, err
-	}
-	params := sqlc.CreateUserParams{
-		Name:     cur.Name,
-		Email:    cur.Email,
-		Phone:    phone,
-		Role:     constant.RoleCustomer,
-		Password: password,
-	}
+func (r *repository) createUser(ctx context.Context, params sqlc.CreateUserParams) (int64, error) {
 	userID, err := r.queries.CreateUser(ctx, params)
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 
 	return userID, nil
 }
 
-func (r *repository) updateUser(ctx context.Context, uur *UpdateUserRequest) error {
-	var phone sql.NullString
-	if uur.Phone != nil {
-		phone.Valid = true
-		phone.String = *uur.Phone
-	}
-	params := sqlc.UpdateUserParams{
-		ID:    uur.ID,
-		Name:  uur.Name,
-		Email: uur.Email,
-		Phone: phone,
-	}
+func (r *repository) updateUser(ctx context.Context, params sqlc.UpdateUserParams) error {
 	err := r.queries.UpdateUser(ctx, params)
 	if err == sql.ErrNoRows {
-		return errUserNotFound.WithArgs(uur.ID)
+		return errUserNotFound.WithArgs(params.ID)
 	}
 	return err
 }

@@ -1,7 +1,5 @@
 package user
 
-import "go-echo-template/internal/shared/utils"
-
 type GetUserResponse struct {
 	ID        int64   `json:"id"`
 	Name      string  `json:"name"`
@@ -20,11 +18,6 @@ type CreateUserRequest struct {
 	// Phone is an optional field. If not provided, it remains nil and is skipped during validation due to the "omitempty" tag.
 	// When specified, its value must match the "phone" rule. This allows an empty string, but the intent is to accept only valid phone numbers when set.
 	Phone *string `json:"phone" validate:"omitempty,phone"`
-}
-
-// HashPassword hashes the Password field using bcrypt.
-func (r *CreateUserRequest) HashPassword() (string, error) {
-	return utils.HashPassword(r.Password)
 }
 
 type CreateUserResponse struct {

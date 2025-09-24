@@ -9,7 +9,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// UserHandler handles HTTP requests for user operations.
 type UserHandler struct {
 	service userService
 }
@@ -20,7 +19,6 @@ func NewUserHandler(db *sql.DB) *UserHandler {
 	return &UserHandler{service: userService}
 }
 
-// RegisterRoutes registers user routes to the Echo group.
 func (h *UserHandler) RegisterRoutes(e *echo.Echo) {
 	e.GET("/api/v1/users/:id", h.GetUser)
 	e.POST("/api/v1/users", h.CreateUser)
@@ -30,15 +28,20 @@ func (h *UserHandler) RegisterRoutes(e *echo.Echo) {
 
 func (h *UserHandler) GetUser(c echo.Context) error {
 	ctx := c.Request().Context()
+	
+	// validate input
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return errInvalidID
 	}
+
+	// service call
 	user, err := h.service.getUser(ctx, id)
 	if err != nil {
 		return err
 	}
 
+	// build response
 	getUserResp := &GetUserResponse{
 		ID:        user.ID,
 		Name:      user.Name,
@@ -51,12 +54,13 @@ func (h *UserHandler) GetUser(c echo.Context) error {
 	if user.Phone.Valid {
 		getUserResp.Phone = &user.Phone.String
 	}
-
 	return response.Success(c, http.StatusOK).WithData(getUserResp).Send()
 }
 
 func (h *UserHandler) CreateUser(c echo.Context) error {
 	ctx := c.Request().Context()
+	
+	// validate input
 	cur := new(CreateUserRequest)
 	if err := c.Bind(cur); err != nil {
 		return errInvalidRequestPayload
@@ -64,20 +68,24 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 	if err := c.Validate(cur); err != nil {
 		return err
 	}
-
+	
+	// service call
 	newUserID, err := h.service.createUser(ctx, cur)
 	if err != nil {
 		return err
 	}
+	
+	// build response
 	resData := &CreateUserResponse{
 		UserID: newUserID,
 	}
-
 	return response.Success(c, http.StatusCreated).WithMessage("SUC:USER_CREATED").WithData(resData).Send()
 }
 
 func (h *UserHandler) UpdateUser(c echo.Context) error {
 	ctx := c.Request().Context()
+	
+	// validate input
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return errInvalidID
@@ -90,23 +98,32 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 		return err
 	}
 
+	// service call
 	uur.ID = id // Ensure id from URL is used.
 	err = h.service.updateUser(ctx, uur)
 	if err != nil {
 		return err
 	}
+	
+	// build response
 	return response.Success(c, http.StatusOK).Send()
 }
 
 func (h *UserHandler) DeleteUser(c echo.Context) error {
 	ctx := c.Request().Context()
+	
+	// validate input
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return errInvalidID
 	}
+	
+	// service call
 	err = h.service.deleteUser(ctx, id)
 	if err != nil {
 		return err
 	}
+	
+	// build response
 	return response.Success(c, http.StatusNoContent).Send()
 }
