@@ -24,7 +24,7 @@ func NewUserHandler(db *sql.DB) *UserHandler {
 func (h *UserHandler) RegisterRoutes(e *echo.Echo) {
 	e.GET("/api/v1/users/:id", h.GetUser)
 	e.POST("/api/v1/users", h.CreateUser)
-	e.PUT("/api/v1/users/:id", h.UpdateUser)
+	e.PATCH("/api/v1/users/:id", h.UpdateUser)
 	e.DELETE("/api/v1/users/:id", h.DeleteUser)
 }
 
@@ -38,7 +38,7 @@ func (h *UserHandler) GetUser(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	
+
 	getUserResp := &GetUserResponse{
 		ID:        user.ID,
 		Name:      user.Name,
@@ -65,11 +65,15 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 		return err
 	}
 
-	err := h.service.createUser(ctx, cur)
+	newUserID, err := h.service.createUser(ctx, cur)
 	if err != nil {
 		return err
 	}
-	return response.Success(c, http.StatusCreated).WithMessage("SUC:USER_CREATED").Send()
+	resData := &CreateUserResponse{
+		UserID: newUserID,
+	}
+
+	return response.Success(c, http.StatusCreated).WithMessage("SUC:USER_CREATED").WithData(resData).Send()
 }
 
 func (h *UserHandler) UpdateUser(c echo.Context) error {
@@ -81,6 +85,9 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 	uur := new(UpdateUserRequest)
 	if err := c.Bind(&uur); err != nil {
 		return errInvalidRequestPayload
+	}
+	if err := c.Validate(uur); err != nil {
+		return err
 	}
 
 	uur.ID = id // Ensure id from URL is used.

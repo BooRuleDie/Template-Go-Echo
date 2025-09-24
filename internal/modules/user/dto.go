@@ -27,6 +27,10 @@ func (r *CreateUserRequest) HashPassword() (string, error) {
 	return utils.HashPassword(r.Password)
 }
 
+type CreateUserResponse struct {
+	UserID int64 `json:"userId"`
+}
+
 type UpdateUserRequest struct {
 	ID    int64
 	Name  string `json:"name" validate:"required,min=3,max=20,alpha"`

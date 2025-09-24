@@ -9,7 +9,7 @@ import (
 
 type userRepository interface {
 	getUserById(ctx context.Context, id int64) (*sqlc.User, error)
-	createUser(ctx context.Context, cur *CreateUserRequest) error
+	createUser(ctx context.Context, cur *CreateUserRequest) (int64, error)
 	deleteUser(ctx context.Context, id int64) error
 	updateUser(ctx context.Context, uur *UpdateUserRequest) error
 }
@@ -40,11 +40,11 @@ func (r *repository) getUserById(ctx context.Context, id int64) (*sqlc.User, err
 		Password:  userRow.Password,
 		CreatedAt: userRow.CreatedAt,
 		UpdatedAt: userRow.UpdatedAt,
-		IsDelete:  userRow.IsDelete,
+		IsDeleted: userRow.IsDeleted,
 	}, nil
 }
 
-func (r *repository) createUser(ctx context.Context, cur *CreateUserRequest) error {
+func (r *repository) createUser(ctx context.Context, cur *CreateUserRequest) (int64, error) {
 	var phone sql.NullString
 	if cur.Phone != nil {
 		phone.Valid = true
@@ -53,7 +53,7 @@ func (r *repository) createUser(ctx context.Context, cur *CreateUserRequest) err
 
 	password, err := cur.HashPassword()
 	if err != nil {
-		return err
+		return 0, err
 	}
 	params := sqlc.CreateUserParams{
 		Name:     cur.Name,
@@ -62,11 +62,12 @@ func (r *repository) createUser(ctx context.Context, cur *CreateUserRequest) err
 		Role:     constant.RoleCustomer,
 		Password: password,
 	}
-	return r.queries.CreateUser(ctx, params)
-}
+	userID, err := r.queries.CreateUser(ctx, params)
+	if err != nil {
+		return 0, nil
+	}
 
-func (r *repository) deleteUser(ctx context.Context, id int64) error {
-	return r.queries.DeleteUser(ctx, id)
+	return userID, nil
 }
 
 func (r *repository) updateUser(ctx context.Context, uur *UpdateUserRequest) error {
@@ -86,4 +87,8 @@ func (r *repository) updateUser(ctx context.Context, uur *UpdateUserRequest) err
 		return errUserNotFound.WithArgs(uur.ID)
 	}
 	return err
+}
+
+func (r *repository) deleteUser(ctx context.Context, id int64) error {
+	return r.queries.DeleteUser(ctx, id)
 }

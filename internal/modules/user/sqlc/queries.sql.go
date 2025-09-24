@@ -10,9 +10,10 @@ import (
 	"database/sql"
 )
 
-const createUser = `-- name: CreateUser :exec
+const createUser = `-- name: CreateUser :one
 INSERT INTO users (name, email, phone, role, password)
 VALUES ($1, $2, $3, $4, $5)
+RETURNING id
 `
 
 type CreateUserParams struct {
@@ -23,19 +24,21 @@ type CreateUserParams struct {
 	Password string
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
-	_, err := q.db.ExecContext(ctx, createUser,
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, createUser,
 		arg.Name,
 		arg.Email,
 		arg.Phone,
 		arg.Role,
 		arg.Password,
 	)
-	return err
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const deleteUser = `-- name: DeleteUser :exec
-UPDATE users SET is_delete = TRUE, updated_at = NOW() WHERE id = $1
+UPDATE users SET is_deleted = TRUE, updated_at = NOW() WHERE id = $1 AND is_deleted = FALSE
 `
 
 func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
@@ -44,7 +47,20 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT id, name, email, phone, role, password, created_at, updated_at, is_delete FROM users WHERE id = $1
+SELECT 
+    id, 
+    name, 
+    email, 
+    phone, 
+    role, 
+    password, 
+    created_at, 
+    updated_at, 
+    is_deleted
+FROM users 
+WHERE 
+    id = $1 AND
+    is_deleted = FALSE
 `
 
 func (q *Queries) GetUserById(ctx context.Context, id int64) (User, error) {
@@ -59,22 +75,20 @@ func (q *Queries) GetUserById(ctx context.Context, id int64) (User, error) {
 		&i.Password,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.IsDelete,
+		&i.IsDeleted,
 	)
 	return i, err
 }
 
 const updateUser = `-- name: UpdateUser :exec
-UPDATE users SET name = $1, email = $2, phone = $3, role = $4, password = $5, updated_at = NOW() WHERE id = $6
+UPDATE users SET name = $1, email = $2, phone = $3, updated_at = NOW() WHERE id = $4 AND is_deleted = FALSE
 `
 
 type UpdateUserParams struct {
-	Name     string
-	Email    string
-	Phone    sql.NullString
-	Role     string
-	Password string
-	ID       int64
+	Name  string
+	Email string
+	Phone sql.NullString
+	ID    int64
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
@@ -82,8 +96,6 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
 		arg.Name,
 		arg.Email,
 		arg.Phone,
-		arg.Role,
-		arg.Password,
 		arg.ID,
 	)
 	return err
