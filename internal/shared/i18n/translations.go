@@ -242,15 +242,6 @@ var Translations = map[string]Translation{
 		},
 	},
 	
-	// ========== USER MODULE ==========
-	"SUC:USER_CREATED": {
-		IsInternal: true,
-		Messages: map[Locale]string{
-			EN_US: "User created successfully",
-			TR_TR: "Kullanıcı başarıyla oluşturuldu",
-		},
-	},
-	
 	// ========== GENERIC ERROR MESSAGES ==========
 	"ERR:HTTP_500": {
 		IsInternal: true,

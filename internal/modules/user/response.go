@@ -7,6 +7,18 @@ import (
 	"go-echo-template/internal/shared/response"
 )
 
+// Success Messages
+var (
+	succUserCreated = &response.SuccessMessage{
+		Code: "SUCC:USER_CREATED",
+		Messages: map[i18n.Locale]string{
+			i18n.EN_US: "User created successfully",
+			i18n.TR_TR: "Kullanıcı başarıyla oluşturuldu",
+		},
+	}
+)
+
+// Errors
 var (
 	errUserNotFound = &response.CustomErr{
 		Status: http.StatusNotFound,

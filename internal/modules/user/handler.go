@@ -84,7 +84,7 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 	resData := &CreateUserResponse{
 		UserID: newUserID,
 	}
-	return response.Success(c, http.StatusCreated).WithMessage("SUC:USER_CREATED").WithData(resData).Send()
+	return response.Success(c, http.StatusCreated).WithMessage(succUserCreated).WithData(resData).Send()
 }
 
 func (h *UserHandler) UpdateUser(c echo.Context) error {
