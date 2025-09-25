@@ -1,8 +1,9 @@
 package user
 
 import (
-	"go-echo-template/internal/shared/response"
 	"net/http"
+	
+	"go-echo-template/internal/shared/response"
 )
 
 var (

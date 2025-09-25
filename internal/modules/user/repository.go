@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"database/sql"
+
 	"go-echo-template/internal/modules/user/sqlc"
 )
 
@@ -14,12 +15,12 @@ type userRepository interface {
 }
 
 type repository struct {
-	queries *sqlc.Queries
 	db      *sql.DB
+	queries *sqlc.Queries
 }
 
 func newUserRepository(db *sql.DB) *repository {
-	return &repository{queries: sqlc.New(db), db: db}
+	return &repository{db: db, queries: sqlc.New(db)}
 }
 
 func (r *repository) getUserById(ctx context.Context, id int64) (*sqlc.User, error) {

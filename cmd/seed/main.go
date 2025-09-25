@@ -4,8 +4,6 @@ import (
 	"context"
 	"log"
 
-	_ "github.com/lib/pq"
-
 	"go-echo-template/internal/config"
 	"go-echo-template/internal/db"
 )

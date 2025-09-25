@@ -3,14 +3,14 @@ package main
 import (
 	"context"
 
-	"github.com/labstack/echo/v4"
-	_ "github.com/lib/pq"
-
 	"go-echo-template/internal/config"
 	"go-echo-template/internal/db"
 	"go-echo-template/internal/modules/user"
 	"go-echo-template/internal/shared/i18n"
 	"go-echo-template/internal/shared/response"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
@@ -26,11 +26,13 @@ func main() {
 	// Use the custom validator
 	e.Validator = response.NewValidator()
 
-	// Use i18n locale middleware
+	// Use global middlewares
 	e.Use(i18n.LocaleMiddleware)
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 
 	// Set custom error handler
-	e.HTTPErrorHandler = response.HTTPErrHandler
+	e.HTTPErrorHandler = response.CustomHTTPErrorHandler
 
 	// Connect to the PostgreSQL DB
 	DB, err := db.NewPostgreSQL(ctx, cfg.DB)

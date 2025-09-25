@@ -2,10 +2,11 @@ package user
 
 import (
 	"database/sql"
-	"go-echo-template/internal/shared/response"
 	"net/http"
 	"strconv"
 
+	"go-echo-template/internal/shared/response"
+	
 	"github.com/labstack/echo/v4"
 )
 
@@ -20,15 +21,16 @@ func NewUserHandler(db *sql.DB) *UserHandler {
 }
 
 func (h *UserHandler) RegisterRoutes(e *echo.Echo) {
-	e.GET("/api/v1/users/:id", h.GetUser)
-	e.POST("/api/v1/users", h.CreateUser)
-	e.PATCH("/api/v1/users/:id", h.UpdateUser)
-	e.DELETE("/api/v1/users/:id", h.DeleteUser)
+	users := e.Group("/api/v1/users")
+	users.GET("/:id", h.GetUser)
+	users.POST("/", h.CreateUser)
+	users.PATCH("/:id", h.UpdateUser)
+	users.DELETE("/:id", h.DeleteUser)
 }
 
 func (h *UserHandler) GetUser(c echo.Context) error {
 	ctx := c.Request().Context()
-	
+
 	// validate input
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -59,7 +61,7 @@ func (h *UserHandler) GetUser(c echo.Context) error {
 
 func (h *UserHandler) CreateUser(c echo.Context) error {
 	ctx := c.Request().Context()
-	
+
 	// validate input
 	cur := new(CreateUserRequest)
 	if err := c.Bind(cur); err != nil {
@@ -68,13 +70,13 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 	if err := c.Validate(cur); err != nil {
 		return err
 	}
-	
+
 	// service call
 	newUserID, err := h.service.createUser(ctx, cur)
 	if err != nil {
 		return err
 	}
-	
+
 	// build response
 	resData := &CreateUserResponse{
 		UserID: newUserID,
@@ -84,7 +86,7 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 
 func (h *UserHandler) UpdateUser(c echo.Context) error {
 	ctx := c.Request().Context()
-	
+
 	// validate input
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -104,26 +106,26 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// build response
 	return response.Success(c, http.StatusOK).Send()
 }
 
 func (h *UserHandler) DeleteUser(c echo.Context) error {
 	ctx := c.Request().Context()
-	
+
 	// validate input
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return errInvalidID
 	}
-	
+
 	// service call
 	err = h.service.deleteUser(ctx, id)
 	if err != nil {
 		return err
 	}
-	
+
 	// build response
 	return response.Success(c, http.StatusNoContent).Send()
 }

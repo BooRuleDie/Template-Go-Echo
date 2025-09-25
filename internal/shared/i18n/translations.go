@@ -277,11 +277,67 @@ var Translations = map[string]Translation{
 	},
 
 	// ========== GENERIC ERROR MESSAGES ==========
-	"ERR:INTERNAL_SERVER_ERROR": {
+	"ERR:HTTP_500": {
 		IsInternal: true,
 		Messages: map[Locale]string{
-			EN_US: "Something went wrong",
-			TR_TR: "Bir şeyler ters gitti",
+			EN_US: "Internal Server Error",
+			TR_TR: "Bir Şeyler Ters Gitti",
+		},
+	},
+	"ERR:HTTP_503": {
+		IsInternal: true,
+		Messages: map[Locale]string{
+			EN_US: "Service Unavailable or Timed Out",
+			TR_TR: "Servis Kullanılamıyor veya Zaman Aşımına Uğradı",
+		},
+	},
+	"ERR:HTTP_400": {
+		IsInternal: true,
+		Messages: map[Locale]string{
+			EN_US: "Bad Request",
+			TR_TR: "Geçersiz İstek",
+		},
+	},
+	"ERR:HTTP_401": {
+		IsInternal: true,
+		Messages: map[Locale]string{
+			EN_US: "Unauthorized",
+			TR_TR: "Yetkisiz Erişim",
+		},
+	},
+	"ERR:HTTP_404": {
+		IsInternal: true,
+		Messages: map[Locale]string{
+			EN_US: "Not Found",
+			TR_TR: "Bulunamadı",
+		},
+	},
+	"ERR:HTTP_405": {
+		IsInternal: true,
+		Messages: map[Locale]string{
+			EN_US: "Method Not Allowed",
+			TR_TR: "İzin Verilmeyen Yöntem",
+		},
+	},
+	"ERR:HTTP_413": {
+		IsInternal: true,
+		Messages: map[Locale]string{
+			EN_US: "Payload Too Large",
+			TR_TR: "İstek Boyutu Çok Büyük",
+		},
+	},
+	"ERR:HTTP_415": {
+		IsInternal: true,
+		Messages: map[Locale]string{
+			EN_US: "Unsupported Media Type",
+			TR_TR: "Desteklenmeyen Medya Türü",
+		},
+	},
+	"ERR:HTTP_429": {
+		IsInternal: true,
+		Messages: map[Locale]string{
+			EN_US: "Too Many Requests",
+			TR_TR: "Çok Fazla İstek",
 		},
 	},
 }

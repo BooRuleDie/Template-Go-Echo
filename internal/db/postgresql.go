@@ -6,10 +6,12 @@ import (
 	"time"
 
 	config "go-echo-template/internal/config"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func NewPostgreSQL(ctx context.Context, DBConfig *config.DBConfig) (*sql.DB, error) {
-	db, err := sql.Open("postgres", DBConfig.GetConnectionString())
+	db, err := sql.Open("pgx", DBConfig.GetConnectionString())
 	if err != nil {
 		return nil, err
 	}

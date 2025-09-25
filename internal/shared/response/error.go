@@ -38,7 +38,7 @@ func (ce *CustomErr) WithArgs(args ...any) *CustomErr {
 }
 
 // Echo Error Handler
-func HTTPErrHandler(err error, c echo.Context) {
+func CustomHTTPErrorHandler(err error, c echo.Context) {
 	locale := i18n.GetLocaleFromContext(c)
 
 	// 1) Handle validation errors
@@ -84,14 +84,27 @@ func HTTPErrHandler(err error, c echo.Context) {
 		return
 	}
 
-	// 3) Fallback to internal server error
+	// 3) Handle Echo's HTTP errors
+	if he, ok := err.(*echo.HTTPError); ok {
+		code := fmt.Sprintf("ERR:HTTP_%d", he.Code)
+		resp := errResponse{
+			IsError: true,
+			Code:   code,
+			Status: he.Code,
+			Message: i18n.Translate(code, locale),
+		}
+		c.JSON(resp.Status, resp)
+		return
+	}
+
+	// 4) Fallback to internal server error
 	resp := errResponse{
 		IsError: true,
-		Code:    "ERR:INTERNAL_SERVER_ERROR",
+		Code:    "ERR:HTTP_500",
 		Status:  http.StatusInternalServerError,
-		Message: i18n.Translate("ERR:INTERNAL_SERVER_ERROR", locale),
+		Message: i18n.Translate("ERR:HTTP_500", locale),
 	}
+	
 	// TODO: log the error after log implementation
-	fmt.Printf("Internal server error: %v\n", err)
 	c.JSON(resp.Status, resp)
 }

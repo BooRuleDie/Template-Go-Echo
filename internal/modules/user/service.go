@@ -3,8 +3,9 @@ package user
 import (
 	"context"
 	"database/sql"
-	"go-echo-template/internal/modules/user/sqlc"
+	
 	constant "go-echo-template/internal/shared/const"
+	"go-echo-template/internal/modules/user/sqlc"
 	"go-echo-template/internal/shared/utils"
 )
 
@@ -46,7 +47,7 @@ func (s *service) createUser(ctx context.Context, cur *CreateUserRequest) (int64
 		Role:     constant.RoleCustomer,
 		Password: password,
 	}
-	
+
 	// repo call
 	return s.repo.createUser(ctx, params)
 }
@@ -64,7 +65,7 @@ func (s *service) updateUser(ctx context.Context, uur *UpdateUserRequest) error 
 		Email: uur.Email,
 		Phone: phone,
 	}
-	
+
 	// repo call
 	return s.repo.updateUser(ctx, params)
 }

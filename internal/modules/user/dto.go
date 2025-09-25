@@ -1,13 +1,15 @@
 package user
 
 type GetUserResponse struct {
-	ID        int64   `json:"id"`
-	Name      string  `json:"name"`
-	Email     string  `json:"email"`
-	Phone     *string `json:"phone"`
-	Role      string  `json:"role"`
-	CreatedAt string  `json:"createdAt"`
-	UpdatedAt string  `json:"updatedAt"`
+	ID        int64  `json:"id"`
+	Name      string `json:"name"`
+	Email     string `json:"email"`
+	Role      string `json:"role"`
+	CreatedAt string `json:"createdAt"`
+	UpdatedAt string `json:"updatedAt"`
+
+	// optional
+	Phone *string `json:"phone"`
 }
 
 type CreateUserRequest struct {
