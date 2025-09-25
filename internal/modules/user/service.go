@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	
-	constant "go-echo-template/internal/shared/const"
+	constant "go-echo-template/internal/shared/constant"
 	"go-echo-template/internal/modules/user/sqlc"
 	"go-echo-template/internal/shared/utils"
 )

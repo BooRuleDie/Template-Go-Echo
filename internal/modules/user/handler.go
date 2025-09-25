@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"go-echo-template/internal/shared/response"
+	constant "go-echo-template/internal/shared/constant"
 	
 	"github.com/labstack/echo/v4"
 )
@@ -50,8 +51,8 @@ func (h *UserHandler) GetUser(c echo.Context) error {
 		Email:     user.Email,
 		Phone:     nil,
 		Role:      user.Role,
-		CreatedAt: user.CreatedAt.Format("2006-01-02 15:04:05"),
-		UpdatedAt: user.UpdatedAt.Format("2006-01-02 15:04:05"),
+		CreatedAt: user.CreatedAt.Format(constant.DefaultDateFormat),
+		UpdatedAt: user.UpdatedAt.Format(constant.DefaultDateFormat),
 	}
 	if user.Phone.Valid {
 		getUserResp.Phone = &user.Phone.String
@@ -78,6 +79,7 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 	}
 
 	// build response
+	// 
 	resData := &CreateUserResponse{
 		UserID: newUserID,
 	}
