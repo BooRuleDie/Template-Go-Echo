@@ -34,7 +34,7 @@ func (h *UserHandler) GetUser(c echo.Context) error {
 	// validate input
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return errInvalidID
+		return errInvalidID.WithArgs(c.Param("id"))
 	}
 
 	// service call

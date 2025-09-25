@@ -21,9 +21,10 @@ type errResponse struct {
 
 // Custom Error
 type CustomErr struct {
-	Code   string
-	Status int
-	Args   []any
+	Code     string
+	Status   int
+	Messages i18n.Messages
+	Args     []any
 }
 
 // Satisfies the error interface
@@ -35,6 +36,27 @@ func (ce *CustomErr) Error() string {
 func (ce *CustomErr) WithArgs(args ...any) *CustomErr {
 	ce.Args = args
 	return ce
+}
+
+func (ce *CustomErr) translate(locale i18n.Locale) string {
+	// Check if locale exists, else fallback
+	if msg, ok := ce.Messages[locale]; ok {
+		if len(ce.Args) > 0 {
+			return fmt.Sprintf(msg, ce.Args...)
+		}
+		return msg
+	}
+
+	// fallback locale
+	if msg, ok := ce.Messages[i18n.DefaultLocale]; ok {
+		if len(ce.Args) > 0 {
+			return fmt.Sprintf(msg, ce.Args...)
+		}
+		return msg
+	}
+
+	// ultimate fallback: return code
+	return ce.Code
 }
 
 // Echo Error Handler
@@ -77,7 +99,7 @@ func CustomHTTPErrorHandler(err error, c echo.Context) {
 			IsError: true,
 			Code:    ce.Code,
 			Status:  ce.Status,
-			Message: i18n.Translate(ce.Code, locale, ce.Args...),
+			Message: ce.translate(locale),
 		}
 		// TODO: log the error after log implementation
 		c.JSON(ce.Status, resp)
@@ -89,8 +111,8 @@ func CustomHTTPErrorHandler(err error, c echo.Context) {
 		code := fmt.Sprintf("ERR:HTTP_%d", he.Code)
 		resp := errResponse{
 			IsError: true,
-			Code:   code,
-			Status: he.Code,
+			Code:    code,
+			Status:  he.Code,
 			Message: i18n.Translate(code, locale),
 		}
 		c.JSON(resp.Status, resp)
@@ -104,7 +126,7 @@ func CustomHTTPErrorHandler(err error, c echo.Context) {
 		Status:  http.StatusInternalServerError,
 		Message: i18n.Translate("ERR:HTTP_500", locale),
 	}
-	
+
 	// TODO: log the error after log implementation
 	c.JSON(resp.Status, resp)
 }
