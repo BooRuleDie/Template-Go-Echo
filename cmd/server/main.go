@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	"go-echo-template/internal/alarm"
 	"go-echo-template/internal/config"
 	"go-echo-template/internal/db"
 	"go-echo-template/internal/modules/user"
@@ -19,6 +20,9 @@ func main() {
 
 	// Load configuration
 	cfg := config.Load()
+
+	// Initiate Global Alarmer
+	alarm.SetGlobalAlarmer(cfg.Alarmer.Telegram)
 
 	// Create Echo instance
 	e := echo.New()
