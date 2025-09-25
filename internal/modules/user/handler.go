@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"go-echo-template/internal/shared/response"
 	constant "go-echo-template/internal/shared/constant"
-	
+	"go-echo-template/internal/shared/response"
+
 	"github.com/labstack/echo/v4"
 )
 
@@ -33,9 +33,10 @@ func (h *UserHandler) GetUser(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	// validate input
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	param := c.Param("id")
+	id, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {
-		return errInvalidID.WithArgs(c.Param("id"))
+		return errInvalidID.WithArgs(param)
 	}
 
 	// service call
@@ -79,7 +80,7 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 	}
 
 	// build response
-	// 
+	//
 	resData := &CreateUserResponse{
 		UserID: newUserID,
 	}
@@ -90,9 +91,10 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	// validate input
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	param := c.Param("id")
+	id, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {
-		return errInvalidID
+		return errInvalidID.WithArgs(param)
 	}
 	uur := new(UpdateUserRequest)
 	if err := c.Bind(&uur); err != nil {
@@ -117,9 +119,10 @@ func (h *UserHandler) DeleteUser(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	// validate input
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	param := c.Param("id")
+	id, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {
-		return errInvalidID
+		return errInvalidID.WithArgs(param)
 	}
 
 	// service call
