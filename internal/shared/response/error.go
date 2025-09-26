@@ -89,7 +89,7 @@ func CustomHTTPErrorHandler(err error, c echo.Context) {
 			Message:          i18n.Translate("VAL:VALIDATION_ERR", locale),
 			ValidationErrors: fieldErrs,
 		}
-		// TODO: log the error after log implementation
+		
 		c.JSON(resp.Status, resp)
 		return
 
@@ -101,7 +101,7 @@ func CustomHTTPErrorHandler(err error, c echo.Context) {
 			Status:  err.Status,
 			Message: err.translate(locale),
 		}
-		// TODO: log the error after log implementation
+		
 		c.JSON(err.Status, resp)
 		return
 
@@ -114,6 +114,7 @@ func CustomHTTPErrorHandler(err error, c echo.Context) {
 			Status:  err.Code,
 			Message: i18n.Translate(code, locale),
 		}
+		
 		c.JSON(resp.Status, resp)
 		return
 
@@ -125,8 +126,7 @@ func CustomHTTPErrorHandler(err error, c echo.Context) {
 			Status:  http.StatusInternalServerError,
 			Message: i18n.Translate("ERR:HTTP_500", locale),
 		}
-
-		// TODO: log the error after log implementation
+		
 		c.JSON(resp.Status, resp)
 	}
 }

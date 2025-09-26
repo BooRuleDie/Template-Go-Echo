@@ -3,12 +3,13 @@ package alarm
 import (
 	"context"
 	"fmt"
-	"go-echo-template/internal/config"
-	"go-echo-template/internal/shared/log"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"go-echo-template/internal/config"
+	"go-echo-template/internal/shared/log"
 )
 
 type telegramAlarmer struct {

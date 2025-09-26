@@ -2,8 +2,9 @@ package config
 
 import (
 	"fmt"
-	"go-echo-template/internal/shared/utils"
 	"time"
+	
+	"go-echo-template/internal/shared/utils"
 )
 
 type DBConfig struct {

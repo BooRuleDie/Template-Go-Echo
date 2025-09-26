@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 
 	"go-echo-template/internal/config"
 	"go-echo-template/internal/db"
@@ -18,7 +17,7 @@ func main() {
 	// Connect to the PostgreSQL DB
 	DB, err := db.NewPostgreSQL(ctx, cfg.DB)
 	if err != nil {
-		log.Fatalf("failed to initialize database: %v", err)
+		panic(err)
 	}
 	defer DB.Close()
 

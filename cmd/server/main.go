@@ -51,7 +51,7 @@ func main() {
 	// Connect to the PostgreSQL DB
 	DB, err := db.NewPostgreSQL(ctx, cfg.DB)
 	if err != nil {
-		e.Logger.Fatalf("failed to initialize database: %v", err)
+		panic(err)
 	}
 	defer DB.Close()
 

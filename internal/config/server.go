@@ -1,8 +1,9 @@
 package config
 
 import (
-	"go-echo-template/internal/shared/utils"
 	"time"
+	
+	"go-echo-template/internal/shared/utils"
 )
 
 type ServerConfig struct {
