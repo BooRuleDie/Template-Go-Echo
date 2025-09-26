@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"go-echo-template/internal/config"
+	"go-echo-template/internal/shared/log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -11,6 +12,8 @@ import (
 )
 
 type telegramAlarmer struct {
+	logger log.CustomLogger
+
 	config     config.TelegramConfig
 	httpClient *http.Client
 }
@@ -19,7 +22,7 @@ type telegramAlarmer struct {
 func (t *telegramAlarmer) Alarm(message string) {
 	// Validate input
 	if strings.TrimSpace(message) == "" {
-		defaultLogger.Printf("ERROR: message cannot be empty")
+		t.logger.Warn("message cannot be empty")
 		return
 	}
 
@@ -42,7 +45,7 @@ func (t *telegramAlarmer) Alarm(message string) {
 			cancel()
 			attemptErr = fmt.Errorf("failed to create request: %w", err)
 			collectedErrors = append(collectedErrors, attemptErr)
-			defaultLogger.Printf("ERROR: %v", attemptErr)
+			t.logger.Error("alarm request create", t.logger.Err(attemptErr))
 			return
 		}
 
@@ -97,7 +100,7 @@ func (t *telegramAlarmer) Alarm(message string) {
 			errorMessages = append(errorMessages, err.Error())
 		}
 		wrappedError := fmt.Errorf("all %d attempts failed: %s", maxRetryCount, strings.Join(errorMessages, "; "))
-		defaultLogger.Printf("ERROR: %v", wrappedError)
+		t.logger.Error("alarm all failed", t.logger.Err(wrappedError))
 	default:
 		// success but errors at the beginning - wrap errors and log
 		var errorMessages []string
@@ -105,24 +108,12 @@ func (t *telegramAlarmer) Alarm(message string) {
 			errorMessages = append(errorMessages, err.Error())
 		}
 		wrappedError := fmt.Errorf("succeeded after %d failures: %s", errCount, strings.Join(errorMessages, "; "))
-		defaultLogger.Printf("WARNING: %v", wrappedError)
+		t.logger.Error("alarm success after fail(s)", t.logger.Err(wrappedError))
 	}
 }
 
 // SetGlobalAlarmer initializes and sets the global alarmer with a new default HTTP client.
-func SetGlobalAlarmer(cfg *config.TelegramConfig) error {
-	if GlobalAlarmer != nil {
-		return fmt.Errorf("global alarmer is already set")
-	}
-
-	// Validate config
-	if strings.TrimSpace(cfg.BOT_TOKEN) == "" {
-		return fmt.Errorf("BOT_TOKEN cannot be empty")
-	}
-	if strings.TrimSpace(cfg.CHAT_ID) == "" {
-		return fmt.Errorf("CHAT_ID cannot be empty")
-	}
-
+func NewAlarmer(cfg *config.TelegramConfig, logger log.CustomLogger) Alarmer {
 	// Create dedicated HTTP client for this alarmer
 	httpClient := &http.Client{
 		Timeout: 10 * time.Second,
@@ -135,12 +126,9 @@ func SetGlobalAlarmer(cfg *config.TelegramConfig) error {
 	}
 
 	// Create the alarmer
-	alarmer := &telegramAlarmer{
+	return &telegramAlarmer{
+		logger:     logger,
 		config:     *cfg,
 		httpClient: httpClient,
 	}
-
-	GlobalAlarmer = alarmer
-	defaultLogger.Printf("SUCCESS: Global alarmer initialized successfully")
-	return nil
 }

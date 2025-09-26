@@ -63,10 +63,11 @@ func (ce *CustomErr) translate(locale i18n.Locale) string {
 func CustomHTTPErrorHandler(err error, c echo.Context) {
 	locale := i18n.GetLocaleFromContext(c)
 
+	switch err := err.(type) {
 	// 1) Handle validation errors
-	if valErrs, ok := err.(validator.ValidationErrors); ok {
+	case validator.ValidationErrors:
 		var fieldErrs []CustomFieldErr
-		for _, fe := range valErrs {
+		for _, fe := range err {
 			fieldKey := fmt.Sprintf("FIELD:%s", strings.ToUpper(fe.Field()))
 			translatedField := i18n.Translate(fieldKey, locale)
 			userInput := fmt.Sprintf("%v", fe.Value())
@@ -91,42 +92,41 @@ func CustomHTTPErrorHandler(err error, c echo.Context) {
 		// TODO: log the error after log implementation
 		c.JSON(resp.Status, resp)
 		return
-	}
 
 	// 2) Handle custom errors
-	if ce, ok := err.(*CustomErr); ok {
+	case *CustomErr:
 		resp := errResponse{
 			IsError: true,
-			Code:    ce.Code,
-			Status:  ce.Status,
-			Message: ce.translate(locale),
+			Code:    err.Code,
+			Status:  err.Status,
+			Message: err.translate(locale),
 		}
 		// TODO: log the error after log implementation
-		c.JSON(ce.Status, resp)
+		c.JSON(err.Status, resp)
 		return
-	}
 
 	// 3) Handle Echo's HTTP errors
-	if he, ok := err.(*echo.HTTPError); ok {
-		code := fmt.Sprintf("ERR:HTTP_%d", he.Code)
+	case *echo.HTTPError:
+		code := fmt.Sprintf("ERR:HTTP_%d", err.Code)
 		resp := errResponse{
 			IsError: true,
 			Code:    code,
-			Status:  he.Code,
+			Status:  err.Code,
 			Message: i18n.Translate(code, locale),
 		}
 		c.JSON(resp.Status, resp)
 		return
-	}
 
 	// 4) Fallback to internal server error
-	resp := errResponse{
-		IsError: true,
-		Code:    "ERR:HTTP_500",
-		Status:  http.StatusInternalServerError,
-		Message: i18n.Translate("ERR:HTTP_500", locale),
-	}
+	default:
+		resp := errResponse{
+			IsError: true,
+			Code:    "ERR:HTTP_500",
+			Status:  http.StatusInternalServerError,
+			Message: i18n.Translate("ERR:HTTP_500", locale),
+		}
 
-	// TODO: log the error after log implementation
-	c.JSON(resp.Status, resp)
+		// TODO: log the error after log implementation
+		c.JSON(resp.Status, resp)
+	}
 }

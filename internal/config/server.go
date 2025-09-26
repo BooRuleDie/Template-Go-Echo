@@ -6,6 +6,8 @@ import (
 )
 
 type ServerConfig struct {
+	AppName      string
+	Version      string
 	Address      string
 	Port         int
 	Environment  string
@@ -16,6 +18,8 @@ type ServerConfig struct {
 
 func newServerConfig() *ServerConfig {
 	return &ServerConfig{
+		AppName:      utils.MustGetStrEnv("APP_NAME"),
+		Version:      utils.MustGetStrEnv("VERSION"),
 		Address:      utils.MustGetStrEnv("SERVER_ADDRESS"),
 		Port:         utils.MustGetIntEnv("SERVER_PORT"),
 		Environment:  utils.MustGetStrEnv("ENVIRONMENT"),
@@ -31,4 +35,8 @@ func (s *ServerConfig) IsDevelopment() bool {
 
 func (s *ServerConfig) IsProduction() bool {
 	return s.Environment == "prod"
+}
+
+func (s *ServerConfig) IsLocal() bool {
+	return s.Environment == "local"
 }

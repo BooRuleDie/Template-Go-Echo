@@ -241,7 +241,7 @@ var Translations = map[string]Translation{
 			TR_TR: "%v şu değerlerden biri olmalıdır: [%v]",
 		},
 	},
-	
+
 	// ========== GENERIC ERROR MESSAGES ==========
 	"ERR:HTTP_500": {
 		IsInternal: true,

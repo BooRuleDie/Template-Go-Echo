@@ -5,20 +5,25 @@ import (
 	"net/http"
 	"strconv"
 
+	"go-echo-template/internal/alarm"
 	constant "go-echo-template/internal/shared/constant"
+	"go-echo-template/internal/shared/log"
 	"go-echo-template/internal/shared/response"
 
 	"github.com/labstack/echo/v4"
 )
 
 type UserHandler struct {
+	logger  log.CustomLogger
+	alarmer alarm.Alarmer
+
 	service userService
 }
 
-func NewUserHandler(db *sql.DB) *UserHandler {
+func NewUserHandler(db *sql.DB, logger log.CustomLogger, alarmer alarm.Alarmer) *UserHandler {
 	userRepo := newUserRepository(db)
-	userService := newUserService(userRepo)
-	return &UserHandler{service: userService}
+	userService := newUserService(userRepo, logger)
+	return &UserHandler{service: userService, logger: logger, alarmer: alarmer}
 }
 
 func (h *UserHandler) RegisterRoutes(e *echo.Echo) {

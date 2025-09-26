@@ -17,7 +17,7 @@ func Load() *Config {
 		Redis:   newRedisConfig(),
 		Alarmer: newAlarmerConfig(),
 		Mail:    newMailConfig(),
-		Object: newObjectConfig(),
-		Queue:  newQueueConfig(),
+		Object:  newObjectConfig(),
+		Queue:   newQueueConfig(),
 	}
 }

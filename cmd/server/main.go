@@ -8,6 +8,7 @@ import (
 	"go-echo-template/internal/db"
 	"go-echo-template/internal/modules/user"
 	"go-echo-template/internal/shared/i18n"
+	"go-echo-template/internal/shared/log"
 	"go-echo-template/internal/shared/response"
 
 	"github.com/labstack/echo/v4"
@@ -21,8 +22,15 @@ func main() {
 	// Load configuration
 	cfg := config.Load()
 
-	// Initiate Global Alarmer
-	alarm.SetGlobalAlarmer(cfg.Alarmer.Telegram)
+	// Initiate Custom Logger
+	logger, err := log.NewCustomLogger(cfg.Server)
+	if err != nil {
+		panic(err)
+	}
+	defer logger.Sync()
+
+	// Initiate Alarmer
+	alarmer := alarm.NewAlarmer(cfg.Alarmer.Telegram, logger)
 
 	// Create Echo instance
 	e := echo.New()
@@ -30,13 +38,15 @@ func main() {
 	// Use the custom validator
 	e.Validator = response.NewValidator()
 
-	// Use global middlewares
-	e.Use(i18n.LocaleMiddleware)
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-
 	// Set custom error handler
 	e.HTTPErrorHandler = response.CustomHTTPErrorHandler
+
+	// Use global middlewares
+	e.Use(middleware.RequestID())
+	e.Use(log.RequestIDContextMiddleware())
+	e.Use(log.LoggerMiddleware(logger))
+	e.Use(i18n.LocaleMiddleware)
+	// e.Use(middleware.Recover())
 
 	// Connect to the PostgreSQL DB
 	DB, err := db.NewPostgreSQL(ctx, cfg.DB)
@@ -46,7 +56,7 @@ func main() {
 	defer DB.Close()
 
 	// Register user routes
-	user.NewUserHandler(DB).RegisterRoutes(e)
+	user.NewUserHandler(DB, logger, alarmer).RegisterRoutes(e)
 
 	e.Logger.Fatal(e.Start(cfg.Server.Address))
 }

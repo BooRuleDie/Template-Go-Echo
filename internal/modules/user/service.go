@@ -3,9 +3,10 @@ package user
 import (
 	"context"
 	"database/sql"
-	
-	constant "go-echo-template/internal/shared/constant"
+
 	"go-echo-template/internal/modules/user/sqlc"
+	constant "go-echo-template/internal/shared/constant"
+	"go-echo-template/internal/shared/log"
 	"go-echo-template/internal/shared/utils"
 )
 
@@ -17,11 +18,13 @@ type userService interface {
 }
 
 type service struct {
+	logger log.CustomLogger
+
 	repo userRepository
 }
 
-func newUserService(repo userRepository) userService {
-	return &service{repo: repo}
+func newUserService(repo userRepository, logger log.CustomLogger) userService {
+	return &service{repo: repo, logger: logger}
 }
 
 func (s *service) getUser(ctx context.Context, id int64) (*sqlc.User, error) {
