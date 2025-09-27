@@ -7,10 +7,9 @@ import (
 
 // key prefixes
 const (
-    userKeyPrefix = "CACHE:USER"
-    postKeyPrefix = "CACHE:POST"
+	userKeyPrefix = "CACHE:USER"
+	postKeyPrefix = "CACHE:POST"
 )
-
 
 type cacheKey struct {
 	Name string
