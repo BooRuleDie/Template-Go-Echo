@@ -7,7 +7,9 @@ import (
 	"go-echo-template/internal/cache"
 	"go-echo-template/internal/config"
 	"go-echo-template/internal/db"
+	"go-echo-template/internal/modules/auth"
 	"go-echo-template/internal/modules/user"
+	sharedAuthService "go-echo-template/internal/shared/auth"
 	"go-echo-template/internal/shared/i18n"
 	"go-echo-template/internal/shared/log"
 	"go-echo-template/internal/shared/response"
@@ -61,11 +63,22 @@ func main() {
 	redis := cache.NewRedisCache(ctx, *cfg.Redis)
 	defer redis.Close()
 
+	// Auth
+	sharedAuthService := sharedAuthService.NewSessionCookie(cfg.Server, redis)
+
+	// API grouping
+	api := e.Group("/api")
+
 	// Register user routes
 	userCache := user.NewUserCache(redis)
 	userRepo := user.NewUserRepository(logger, postgreSQL, userCache)
-	userService := user.NewUserService(logger, userRepo)
-	user.NewUserHandler(logger, alarmer, userService).RegisterRoutes(e)
+	userService := user.NewUserService(logger, userRepo, sharedAuthService)
+	user.NewUserHandler(logger, alarmer, userService, sharedAuthService).RegisterRoutes(api)
+
+	// Register auth routes
+	authRepo := auth.NewAuthRepository(logger, postgreSQL)
+	authService := auth.NewAuthService(logger, authRepo, sharedAuthService)
+	auth.NewAuthHandler(logger, alarmer, authService).RegisterRoutes(api)
 
 	e.Logger.Fatal(e.Start(cfg.Server.Address))
 }

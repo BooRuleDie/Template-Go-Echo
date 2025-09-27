@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"go-echo-template/internal/alarm"
+	"go-echo-template/internal/shared/auth"
 	constant "go-echo-template/internal/shared/constant"
 	"go-echo-template/internal/shared/log"
 	"go-echo-template/internal/shared/response"
@@ -17,28 +18,42 @@ type UserHandler struct {
 	alarmer alarm.Alarmer
 
 	service userService
+	auth    auth.AuthService
 }
 
-func NewUserHandler(logger log.CustomLogger, alarmer alarm.Alarmer, service userService) *UserHandler {
-	return &UserHandler{logger: logger, alarmer: alarmer, service: service}
+func NewUserHandler(logger log.CustomLogger, alarmer alarm.Alarmer, service userService, authService auth.AuthService) *UserHandler {
+	return &UserHandler{logger: logger, alarmer: alarmer, service: service, auth: authService}
 }
 
-func (h *UserHandler) RegisterRoutes(e *echo.Echo) {
-	users := e.Group("/api/v1/users")
-	users.GET("/:id", h.GetUser)
+func (h *UserHandler) RegisterRoutes(e *echo.Group) {
+	users := e.Group("/v1/users")
+	// public API
 	users.POST("/", h.CreateUser)
-	users.PATCH("/:id", h.UpdateUser)
-	users.DELETE("/:id", h.DeleteUser)
+
+	// authenticated APIs
+	usersAuth := users.Group("", h.auth.CheckAuth(false, constant.RoleCustomer))
+	usersAuth.GET("/:id", h.GetUser)
+	usersAuth.PATCH("/:id", h.UpdateUser)
+	usersAuth.DELETE("/:id", h.DeleteUser)
 }
 
 func (h *UserHandler) GetUser(c echo.Context) error {
 	ctx := c.Request().Context()
+	userFromCtx, ok := auth.GetUserFromContext(c)
+	if !ok {
+		return response.ErrUserNotFound
+	}
 
 	// validate input
 	param := c.Param("id")
 	id, err := strconv.ParseInt(param, 10, 64)
 	if err != nil {
 		return errInvalidID.WithArgs(param)
+	}
+	
+	// Access Control
+	if userFromCtx.ID != id {
+		return response.ErrSessionUnauthorized
 	}
 
 	// service call
@@ -69,7 +84,7 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 	// validate input
 	cur := new(CreateUserRequest)
 	if err := c.Bind(cur); err != nil {
-		return errInvalidRequestPayload
+		return response.ErrInvalidRequestPayload
 	}
 	if err := c.Validate(cur); err != nil {
 		return err
@@ -90,7 +105,10 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 }
 
 func (h *UserHandler) UpdateUser(c echo.Context) error {
-	ctx := c.Request().Context()
+	userFromCtx, ok := auth.GetUserFromContext(c)
+	if !ok {
+		return response.ErrUserNotFound
+	}
 
 	// validate input
 	param := c.Param("id")
@@ -100,15 +118,20 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 	}
 	uur := new(UpdateUserRequest)
 	if err := c.Bind(&uur); err != nil {
-		return errInvalidRequestPayload
+		return response.ErrInvalidRequestPayload
 	}
 	if err := c.Validate(uur); err != nil {
 		return err
 	}
+	
+	// Access Control
+	if userFromCtx.ID != id {
+		return response.ErrSessionUnauthorized
+	}
 
 	// service call
 	uur.ID = id // Ensure id from URL is used.
-	err = h.service.updateUser(ctx, uur)
+	err = h.service.updateUser(c, uur)
 	if err != nil {
 		return err
 	}
@@ -118,7 +141,10 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 }
 
 func (h *UserHandler) DeleteUser(c echo.Context) error {
-	ctx := c.Request().Context()
+	userFromCtx, ok := auth.GetUserFromContext(c)
+	if !ok {
+		return response.ErrUserNotFound
+	}
 
 	// validate input
 	param := c.Param("id")
@@ -126,13 +152,18 @@ func (h *UserHandler) DeleteUser(c echo.Context) error {
 	if err != nil {
 		return errInvalidID.WithArgs(param)
 	}
+	
+	// Access Control
+	if userFromCtx.ID != id {
+		return response.ErrSessionUnauthorized
+	}
 
 	// service call
-	err = h.service.deleteUser(ctx, id)
+	err = h.service.deleteUser(c, id)
 	if err != nil {
 		return err
 	}
 
 	// build response
-	return response.Success(c, http.StatusNoContent).Send()
+	return response.Success(c, http.StatusOK).Send()
 }

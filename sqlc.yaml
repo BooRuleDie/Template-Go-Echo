@@ -7,3 +7,10 @@ sql:
           go:
               package: "sqlc"
               out: "internal/modules/user/sqlc"
+    - schema: "migrations"
+      queries: "internal/modules/auth/sqlc"
+      engine: "postgresql"
+      gen:
+          go:
+              package: "sqlc"
+              out: "internal/modules/auth/sqlc"

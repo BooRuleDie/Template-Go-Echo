@@ -20,14 +20,6 @@ var (
 
 // Errors
 var (
-	errUserNotFound = &response.CustomErr{
-		Status: http.StatusNotFound,
-		Code:   "ERR:USER_NOT_FOUND",
-		Messages: map[i18n.Locale]string{
-			i18n.EN_US: "User with ID %v not found",
-			i18n.TR_TR: "%v ID'li kullanıcı bulunamadı",
-		},
-	}
 	errUserAlreadyExists = &response.CustomErr{
 		Status: http.StatusConflict,
 		Code:   "ERR:USER_ALREADY_EXISTS",
@@ -44,12 +36,12 @@ var (
 			i18n.TR_TR: "ID'si %v olan kullanıcı bulunamadı",
 		},
 	}
-	errInvalidRequestPayload = &response.CustomErr{
-		Status: http.StatusBadRequest,
-		Code:   "ERR:USER_INVALID_REQUEST_PAYLOAD",
+	errUserEmailAlreadyExists = &response.CustomErr{
+		Status: http.StatusConflict,
+		Code:   "ERR:USER_EMAIL_ALREADY_EXISTS",
 		Messages: map[i18n.Locale]string{
-			i18n.EN_US: "Invalid request payload",
-			i18n.TR_TR: "Geçersiz istek verisi",
+			i18n.EN_US: "A user with that email already exists",
+			i18n.TR_TR: "Bu e-posta adresine sahip bir kullanıcı zaten kayıtlı",
 		},
 	}
 )

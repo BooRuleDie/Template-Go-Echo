@@ -3,17 +3,21 @@ package user
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	DB "go-echo-template/internal/db"
 	"go-echo-template/internal/modules/user/sqlc"
 	"go-echo-template/internal/shared/log"
+	"go-echo-template/internal/shared/response"
+
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type userRepository interface {
 	getUserById(ctx context.Context, userID int64) (*sqlc.User, error)
 	createUser(ctx context.Context, params sqlc.CreateUserParams) (int64, error)
+	updateUser(ctx context.Context, params sqlc.UpdateUserParams) (*sqlc.User, error)
 	deleteUser(ctx context.Context, userID int64) error
-	updateUser(ctx context.Context, params sqlc.UpdateUserParams) error
 }
 
 type repository struct {
@@ -25,7 +29,7 @@ type repository struct {
 	cache userCache
 }
 
-func NewUserRepository(logger log.CustomLogger, db *sql.DB, cache userCache) *repository {
+func NewUserRepository(logger log.CustomLogger, db *sql.DB, cache userCache) userRepository {
 	return &repository{logger: logger, db: db, queries: sqlc.New(db), cache: cache}
 }
 
@@ -40,7 +44,7 @@ func (r *repository) getUserById(ctx context.Context, userID int64) (*sqlc.User,
 
 	userRow, err := r.queries.GetUserById(ctx, userID)
 	if err == sql.ErrNoRows {
-		return nil, errUserNotFound.WithArgs(userID)
+		return nil, response.ErrUserNotFound
 	}
 	if err != nil {
 		return nil, err
@@ -68,20 +72,24 @@ func (r *repository) getUserById(ctx context.Context, userID int64) (*sqlc.User,
 func (r *repository) createUser(ctx context.Context, params sqlc.CreateUserParams) (int64, error) {
 	userID, err := r.queries.CreateUser(ctx, params)
 	if err != nil {
+		// Check for unique constraint violation on users_email_unique_active
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return 0, errUserEmailAlreadyExists
+		}
 		return 0, err
 	}
-
 	return userID, nil
 }
 
-func (r *repository) updateUser(ctx context.Context, params sqlc.UpdateUserParams) error {
+func (r *repository) updateUser(ctx context.Context, params sqlc.UpdateUserParams) (*sqlc.User, error) {
 	var user *sqlc.User
 	if txErr := DB.WithTx(ctx, r.db, func(tx *sql.Tx) error {
 		qtx := r.queries.WithTx(tx)
 
 		if err := qtx.UpdateUser(ctx, params); err != nil {
 			if err == sql.ErrNoRows {
-				return errUserNotFound.WithArgs(params.ID)
+				return response.ErrUserNotFound
 			}
 			return err
 		}
@@ -89,7 +97,7 @@ func (r *repository) updateUser(ctx context.Context, params sqlc.UpdateUserParam
 		userRow, err := qtx.GetUserById(ctx, params.ID)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				return errUserNotFound.WithArgs(params.ID)
+				return response.ErrUserNotFound
 			}
 			return err
 		}
@@ -107,15 +115,20 @@ func (r *repository) updateUser(ctx context.Context, params sqlc.UpdateUserParam
 		}
 		return nil
 	}); txErr != nil {
-		return txErr
+		return nil, txErr
 	}
 
 	if err := r.cache.Set(ctx, user); err != nil {
-		r.logger.WarnWithContext(ctx, "failed to set user in cache during update", r.logger.Err(err), r.logger.Int("userID", int(params.ID)))
+		r.logger.WarnWithContext(
+			ctx,
+			"failed to set user in cache during update",
+			r.logger.Err(err),
+			r.logger.Int("userID", int(params.ID)),
+		)
 		// Do not return error, continue
 	}
 
-	return nil
+	return user, nil
 }
 
 func (r *repository) deleteUser(ctx context.Context, userID int64) error {

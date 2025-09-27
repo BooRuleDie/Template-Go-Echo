@@ -11,5 +11,11 @@ CREATE TABLE users (
     is_deleted BOOLEAN NOT NULL DEFAULT FALSE
 );
 
+-- Create partial unique index - only enforces uniqueness for non-deleted users
+CREATE UNIQUE INDEX users_email_unique_active 
+ON users (email) 
+WHERE is_deleted = FALSE;
+
 -- +goose Down
+DROP INDEX IF EXISTS users_email_unique_active;
 DROP TABLE users;
