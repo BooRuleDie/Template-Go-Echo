@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"net/http/httputil"
+	"net/url"
+	"strings"
 
 	"go-echo-template/internal/alarm"
 	"go-echo-template/internal/cache"
@@ -49,7 +52,15 @@ func main() {
 	e.Use(log.RequestIDContextMiddleware())
 	e.Use(log.LoggerMiddleware(logger))
 	e.Use(i18n.LocaleMiddleware)
-	e.Use(middleware.ContextTimeout(cfg.Server.RequestTimeout))
+	e.Use(middleware.ContextTimeoutWithConfig(middleware.ContextTimeoutConfig{
+		Timeout: cfg.Server.RequestTimeout,
+		Skipper: func(c echo.Context) bool {
+			// Skip timeout middleware for WebSocket upgrade requests
+			// This is implemented to prevent local HMR websocket errors for web
+			return strings.ToLower(c.Request().Header.Get("Connection")) == "upgrade" &&
+				strings.ToLower(c.Request().Header.Get("Upgrade")) == "websocket"
+		},
+	}))
 	// e.Use(middleware.Recover())
 
 	// Connect to the PostgreSQL DB
@@ -79,6 +90,23 @@ func main() {
 	authRepo := auth.NewAuthRepository(logger, postgreSQL)
 	authService := auth.NewAuthService(logger, authRepo, sharedAuthService)
 	auth.NewAuthHandler(logger, alarmer, authService).RegisterRoutes(api)
+
+	// Register web route
+	if cfg.Server.IsLocal() {
+		target, _ := url.Parse(cfg.Server.LocalWebURL)
+		proxy := httputil.NewSingleHostReverseProxy(target)
+
+		// Catch-all route for frontend (but not /api)
+		e.Any("/*", func(c echo.Context) error {
+			req := c.Request()
+			res := c.Response()
+			proxy.ServeHTTP(res, req)
+			return nil
+		})
+	} else {
+		// embed the dist
+		// webFS
+	}
 
 	e.Logger.Fatal(e.Start(cfg.Server.Address))
 }

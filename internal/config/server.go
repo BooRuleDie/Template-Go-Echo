@@ -13,6 +13,7 @@ type ServerConfig struct {
 	Port           int
 	Environment    string
 	RequestTimeout time.Duration
+	LocalWebURL    string
 }
 
 func newServerConfig() *ServerConfig {
@@ -23,6 +24,7 @@ func newServerConfig() *ServerConfig {
 		Port:           utils.MustGetIntEnv("SERVER_PORT"),
 		Environment:    utils.MustGetStrEnv("ENVIRONMENT"),
 		RequestTimeout: utils.MustGetDurationEnv("REQUEST_TIMEOUT"),
+		LocalWebURL:    utils.MustGetStrEnv("LOCAL_WEB_URL"),
 	}
 }
 
