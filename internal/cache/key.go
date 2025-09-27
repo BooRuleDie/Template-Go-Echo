@@ -7,8 +7,8 @@ import (
 
 // key prefixes
 const (
-    userKeyPrefix = "USER"
-    postKeyPrefix = "POST"
+    userKeyPrefix = "CACHE:USER"
+    postKeyPrefix = "CACHE:POST"
 )
 
 

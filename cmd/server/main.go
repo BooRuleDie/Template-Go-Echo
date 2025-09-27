@@ -47,6 +47,7 @@ func main() {
 	e.Use(log.RequestIDContextMiddleware())
 	e.Use(log.LoggerMiddleware(logger))
 	e.Use(i18n.LocaleMiddleware)
+	e.Use(middleware.ContextTimeout(cfg.Server.RequestTimeout))
 	// e.Use(middleware.Recover())
 
 	// Connect to the PostgreSQL DB

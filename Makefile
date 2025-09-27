@@ -14,8 +14,8 @@ tidy:
 	@go mod tidy
 
 # Run the application using air
-.PHONY: run
-run: infra-up
+.PHONY: run 
+run: infra-up wait-for-infra migrate-up
 	@air
 
 # Clean the test cache
@@ -59,6 +59,16 @@ migrate-up:
 .PHONY: migrate-down
 migrate-down:
 	@goose -dir ./migrations postgres "postgres://$$DB_USER:$$DB_PASSWORD@$$DB_HOST:$$DB_PORT/$$DB_NAME?sslmode=$$DB_SSL_MODE" down
+
+# Wait for Infra
+.PHONY: wait-for-infra
+wait-for-infra:
+	@until docker exec postgres pg_isready -U $(DB_USER) -d $(DB_NAME) >/dev/null 2>&1; do \
+		sleep 1; \
+	done
+	@until docker exec redis redis-cli -a $(REDIS_PASSWORD) ping >/dev/null 2>&1; do \
+		sleep 1; \
+	done
 
 # Install 'sqlc' code generation tool
 .PHONY: install-sqlc
