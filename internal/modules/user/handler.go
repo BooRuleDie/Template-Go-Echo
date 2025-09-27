@@ -1,7 +1,6 @@
 package user
 
 import (
-	"database/sql"
 	"net/http"
 	"strconv"
 
@@ -20,10 +19,8 @@ type UserHandler struct {
 	service userService
 }
 
-func NewUserHandler(db *sql.DB, logger log.CustomLogger, alarmer alarm.Alarmer) *UserHandler {
-	userRepo := newUserRepository(db)
-	userService := newUserService(userRepo, logger)
-	return &UserHandler{service: userService, logger: logger, alarmer: alarmer}
+func NewUserHandler(logger log.CustomLogger, alarmer alarm.Alarmer, service userService) *UserHandler {
+	return &UserHandler{logger: logger, alarmer: alarmer, service: service}
 }
 
 func (h *UserHandler) RegisterRoutes(e *echo.Echo) {

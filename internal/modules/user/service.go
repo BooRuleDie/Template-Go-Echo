@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 
-	"go-echo-template/internal/modules/user/sqlc"
 	constant "go-echo-template/internal/shared/constant"
+	"go-echo-template/internal/modules/user/sqlc"
 	"go-echo-template/internal/shared/log"
 	"go-echo-template/internal/shared/utils"
 )
@@ -19,11 +19,10 @@ type userService interface {
 
 type service struct {
 	logger log.CustomLogger
-
 	repo userRepository
 }
 
-func newUserService(repo userRepository, logger log.CustomLogger) userService {
+func NewUserService(logger log.CustomLogger, repo userRepository) userService {
 	return &service{repo: repo, logger: logger}
 }
 

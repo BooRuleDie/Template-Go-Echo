@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"go-echo-template/internal/alarm"
+	"go-echo-template/internal/cache"
 	"go-echo-template/internal/config"
 	"go-echo-template/internal/db"
 	"go-echo-template/internal/modules/user"
@@ -49,14 +50,21 @@ func main() {
 	// e.Use(middleware.Recover())
 
 	// Connect to the PostgreSQL DB
-	DB, err := db.NewPostgreSQL(ctx, cfg.DB)
+	postgreSQL, err := db.NewPostgreSQL(ctx, cfg.DB)
 	if err != nil {
 		panic(err)
 	}
-	defer DB.Close()
+	defer postgreSQL.Close()
+
+	// Connect to the Redis Cache
+	redis := cache.NewRedisCache(ctx, *cfg.Redis)
+	defer redis.Close()
 
 	// Register user routes
-	user.NewUserHandler(DB, logger, alarmer).RegisterRoutes(e)
+	userCache := user.NewUserCache(redis)
+	userRepo := user.NewUserRepository(logger, postgreSQL, userCache)
+	userService := user.NewUserService(logger, userRepo)
+	user.NewUserHandler(logger, alarmer, userService).RegisterRoutes(e)
 
 	e.Logger.Fatal(e.Start(cfg.Server.Address))
 }

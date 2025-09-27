@@ -3,7 +3,7 @@ package config
 import (
 	"fmt"
 	"time"
-	
+
 	"go-echo-template/internal/shared/utils"
 )
 
