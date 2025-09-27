@@ -8,35 +8,36 @@ unit-test:
 build:
 	@go build -o tmp/app ./cmd/server
 
-# Tidy go.mod and go.sum
-.PHONY: tidy
-tidy:
-	@go mod tidy
-
-# Run the application using air
-.PHONY: run 
-run: infra-up wait-for-infra migrate-up
-	@air
-
-# Clean the test cache
-.PHONY: clean-testcache
-clean-testcache:
-	@go clean -testcache
-
-# Start infrastructure with Docker Compose
-.PHONY: infra-up
-infra-up:
-	@docker compose up -d
 
 # Stop infrastructure with Docker Compose
 .PHONY: infra-down
 infra-down:
 	@docker compose down
 
-# Install 'goose' migration tool
-.PHONY: install-goose
-install-goose:
-	@go install github.com/pressly/goose/v3/cmd/goose@latest
+.PHONY: run
+run:
+	@echo "🚀 Starting complete development environment setup..."
+	@echo "\n📦 Step 1: Building Docker image..."
+	@docker build -f ./Dockerfile.local -t go-backend:latest .
+	@echo "\n🧹 Step 2: Cleaning old Docker images..."
+	@docker image prune -f
+	@echo "🐳 Step 3: Starting infrastructure with Docker Compose..."
+	@docker compose up -d
+	@until docker exec postgres pg_isready -U $(DB_USER) -d $(DB_NAME) >/dev/null 2>&1; do \
+		printf "."; \
+		sleep 1; \
+	done
+	@until docker exec redis redis-cli -a $(REDIS_PASSWORD) ping >/dev/null 2>&1; do \
+		printf "."; \
+		sleep 1; \
+	done
+	@goose -dir ./migrations postgres "postgres://$$DB_USER:$$DB_PASSWORD@$$DB_HOST:$$DB_PORT/$$DB_NAME?sslmode=$$DB_SSL_MODE" up
+	@echo "\n✅ All setup completed! Your development environment is ready."
+
+# Clean the test cache
+.PHONY: clean-testcache
+clean-testcache:
+	@go clean -testcache
 
 # Show current status of all migrations
 .PHONY: migrate-status
@@ -59,16 +60,6 @@ migrate-up:
 .PHONY: migrate-down
 migrate-down:
 	@goose -dir ./migrations postgres "postgres://$$DB_USER:$$DB_PASSWORD@$$DB_HOST:$$DB_PORT/$$DB_NAME?sslmode=$$DB_SSL_MODE" down
-
-# Wait for Infra
-.PHONY: wait-for-infra
-wait-for-infra:
-	@until docker exec postgres pg_isready -U $(DB_USER) -d $(DB_NAME) >/dev/null 2>&1; do \
-		sleep 1; \
-	done
-	@until docker exec redis redis-cli -a $(REDIS_PASSWORD) ping >/dev/null 2>&1; do \
-		sleep 1; \
-	done
 
 # Install 'sqlc' code generation tool
 .PHONY: install-sqlc

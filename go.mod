@@ -1,6 +1,6 @@
 module go-echo-template
 
-go 1.24.2
+go 1.25.1
 
 require (
 	github.com/go-playground/validator/v10 v10.27.0

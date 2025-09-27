@@ -1,0 +1,65 @@
+# Build artifacts and temporary files
+tmp/
+dist/
+build/
+
+# Docker-related files
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Configuration files (keep essential ones, exclude sensitive)
+.env*
+*.local
+
+# Version control
+.git/
+.gitignore
+.gitattributes
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.editorconfig
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Go vendor (if using)
+vendor/
+
+# Database files (local development)
+*.db
+*.sqlite
+*.sqlite3
+
+# Build tools and configs that aren't needed in container
+Makefile
+.air.toml
+air_tmp/
+sqlc.yaml
+
+# Certificates and keys
+*.pem
+*.key
+*.crt
+*.p12
+
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib
