@@ -2,7 +2,6 @@ services:
     app:
         image: go-backend:latest
         container_name: go-backend
-        command: air -c .air.toml
         volumes:
             - .:/app
             - go-mod:/go/pkg/mod
@@ -14,6 +13,9 @@ services:
         depends_on:
             - postgres
             - redis
+        command: >
+            sh -c "goose -dir /app/migrations postgres 'postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?sslmode=${DB_SSL_MODE}' up && 
+            air -c .air.toml"
 
     postgres:
         image: postgres:17.4

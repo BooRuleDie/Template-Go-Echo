@@ -21,18 +21,9 @@ run:
 	@docker build -f ./Dockerfile.local -t go-backend:latest .
 	@echo "\n🧹 Step 2: Cleaning old Docker images..."
 	@docker image prune -f
-	@echo "🐳 Step 3: Starting infrastructure with Docker Compose..."
+	@echo "\n🐳 Step 3: Starting infrastructure with Docker Compose..."
 	@docker compose up -d
-	@until docker exec postgres pg_isready -U $(DB_USER) -d $(DB_NAME) >/dev/null 2>&1; do \
-		printf "."; \
-		sleep 1; \
-	done
-	@until docker exec redis redis-cli -a $(REDIS_PASSWORD) ping >/dev/null 2>&1; do \
-		printf "."; \
-		sleep 1; \
-	done
-	@goose -dir ./migrations postgres "postgres://$$DB_USER:$$DB_PASSWORD@$$DB_HOST:$$DB_PORT/$$DB_NAME?sslmode=$$DB_SSL_MODE" up
-	@echo "\n✅ All setup completed! Your development environment is ready."
+	@echo "\n✅ All setup completed! Migrations will run automatically before starting the app."
 
 # Clean the test cache
 .PHONY: clean-testcache

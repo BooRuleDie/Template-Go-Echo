@@ -1,9 +1,29 @@
 # Dockerfile.dev
+FROM golang:1.25.1-alpine AS build
+
+RUN apk add --no-cache git curl bash
+
+WORKDIR /build
+
+# Clone goose source
+RUN git clone --depth=1 --branch v3.25.0 https://github.com/pressly/goose.git
+
+WORKDIR /build/goose
+
+# Build goose with ONLY postgres driver
+RUN go build -tags='no_mysql no_sqlite3 no_mssql no_clickhouse no_libsql no_vertica no_ydb' \
+    -o /goose ./cmd/goose
+
+# Final stage
 FROM golang:1.25.1-alpine
 
-# Install tools
-RUN apk add --no-cache git curl bash && \
-    go install github.com/air-verse/air@v1.63.0
+RUN apk add --no-cache git curl bash
+
+# Install air
+RUN go install github.com/air-verse/air@v1.63.0
+
+# Copy slim goose binary
+COPY --from=build /goose /usr/local/bin/goose
 
 WORKDIR /app
 
@@ -11,8 +31,5 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy the rest of the source
+# Copy source
 COPY . .
-
-# Run with Air using your config
-CMD ["air", "-c", ".air.toml"]
