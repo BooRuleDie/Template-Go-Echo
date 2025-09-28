@@ -6,16 +6,16 @@ unit-test:
 # Build the application
 .PHONY: build
 build:
-	@go build -o tmp/app ./cmd/server
+	@go build -o tmp/build ./cmd/server
 
 
 # Stop infrastructure with Docker Compose
-.PHONY: infra-down
-infra-down:
+.PHONY: down
+down:
 	@docker compose down
 
-.PHONY: run
-run:
+.PHONY: up
+up:
 	@echo "🚀 Starting complete development environment setup..."
 	@echo "\n📦 Step 1: Building Docker image..."
 	@docker build -f ./Dockerfile.local -t go-backend:latest .
@@ -33,29 +33,24 @@ clean-testcache:
 # Show current status of all migrations
 .PHONY: migrate-status
 migrate-status:
-	@goose -dir ./migrations postgres "postgres://$$DB_USER:$$DB_PASSWORD@$$DB_HOST:$$DB_PORT/$$DB_NAME?sslmode=$$DB_SSL_MODE" status
+	@goose -dir ./migration postgres "postgres://$$DB_USER:$$DB_PASSWORD@$$DB_HOST:$$DB_PORT/$$DB_NAME?sslmode=$$DB_SSL_MODE" status
 
 # Create a new migration file with a user-provided name
 .PHONY: migrate-create
 migrate-create:
-	@mkdir -p ./migrations
+	@mkdir -p ./migration
 	@read -p "Enter migration name: " name; \
-	goose -s -dir ./migrations create "$$name" sql
+	goose -s -dir ./migration create "$$name" sql
 
 # Apply all up (new) migrations
 .PHONY: migrate-up
 migrate-up:
-	@goose -dir ./migrations postgres "postgres://$$DB_USER:$$DB_PASSWORD@$$DB_HOST:$$DB_PORT/$$DB_NAME?sslmode=$$DB_SSL_MODE" up
+	@goose -dir ./migration postgres "postgres://$$DB_USER:$$DB_PASSWORD@$$DB_HOST:$$DB_PORT/$$DB_NAME?sslmode=$$DB_SSL_MODE" up
 
 # Roll back the most recent migration
 .PHONY: migrate-down
 migrate-down:
-	@goose -dir ./migrations postgres "postgres://$$DB_USER:$$DB_PASSWORD@$$DB_HOST:$$DB_PORT/$$DB_NAME?sslmode=$$DB_SSL_MODE" down
-
-# Install 'sqlc' code generation tool
-.PHONY: install-sqlc
-install-sqlc:
-	@go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+	@goose -dir ./migration postgres "postgres://$$DB_USER:$$DB_PASSWORD@$$DB_HOST:$$DB_PORT/$$DB_NAME?sslmode=$$DB_SSL_MODE" down
 
 # Generate Go code from SQL queries
 .PHONY: sqlc

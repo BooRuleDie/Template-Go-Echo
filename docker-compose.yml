@@ -14,7 +14,7 @@ services:
             - postgres
             - redis
         command: >
-            sh -c "goose -dir /app/migrations postgres 'postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?sslmode=${DB_SSL_MODE}' up &&
+            sh -c "goose -dir /app/migration postgres 'postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?sslmode=${DB_SSL_MODE}' up &&
             air -c .air.toml"
 
     web:
@@ -23,7 +23,7 @@ services:
         working_dir: /app
         command: sh -c "npm install && npm run dev"
         volumes:
-            - ./templates/web:/app
+            - ./web:/app
         ports:
             - "5173:5173"
 

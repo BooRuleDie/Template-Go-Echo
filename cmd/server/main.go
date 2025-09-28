@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"io/fs"
+	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"strings"
@@ -16,6 +18,7 @@ import (
 	"go-echo-template/internal/shared/i18n"
 	"go-echo-template/internal/shared/log"
 	"go-echo-template/internal/shared/response"
+	"go-echo-template/web"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -104,8 +107,23 @@ func main() {
 			return nil
 		})
 	} else {
-		// embed the dist
-		// webFS
+		// Create a sub filesystem for the dist directory
+		distFS, err := fs.Sub(web.WebFS, "dist")
+		if err != nil {
+			panic(err)
+		}
+
+		// Serve static files from the embedded filesystem
+		e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+			Root:       "/",
+			Index:      "index.html",
+			HTML5:      true, // This enables SPA routing - serves index.html for non-existent routes
+			Filesystem: http.FS(distFS),
+			Skipper: func(c echo.Context) bool {
+				// Skip static middleware for API routes
+				return strings.HasPrefix(c.Request().URL.Path, "/api")
+			},
+		}))
 	}
 
 	e.Logger.Fatal(e.Start(cfg.Server.Address))
