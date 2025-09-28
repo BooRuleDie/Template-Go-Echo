@@ -36,8 +36,8 @@ type AuthService interface {
 	CheckAuth(isOptional bool, roles ...string) echo.MiddlewareFunc
 
 	// Auth API methods (handler specific)
-	APILogin(c echo.Context, req *LoginRequest) error
-	APIRefresh(c echo.Context) error
+	apiLogin(c echo.Context, req *LoginRequest) error
+	apiRefresh(c echo.Context) error
 }
 
 // Session user data
@@ -263,7 +263,7 @@ func (s *service) CheckAuth(isOptional bool, roles ...string) echo.MiddlewareFun
 
 // --- AUTH API METHODS ---
 
-func (s *service) APILogin(c echo.Context, req *LoginRequest) error {
+func (s *service) apiLogin(c echo.Context, req *LoginRequest) error {
 	// Get user by email
 	userRow, err := s.repo.getUserByEmail(c.Request().Context(), req.Email)
 	if err != nil {
@@ -289,7 +289,7 @@ func (s *service) APILogin(c echo.Context, req *LoginRequest) error {
 }
 
 // APIRefresh: handler-specific auth method for /refresh
-func (s *service) APIRefresh(c echo.Context) error {
+func (s *service) apiRefresh(c echo.Context) error {
 	// Optionally get associated user (could get from session or DB as needed, here nil to just refresh expiry)
 	return s.Refresh(c, nil)
 }

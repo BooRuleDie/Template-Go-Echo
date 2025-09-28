@@ -39,7 +39,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	}
 
 	// service call
-	if err := h.service.APILogin(c, lr); err != nil {
+	if err := h.service.apiLogin(c, lr); err != nil {
 		return err
 	}
 
@@ -49,7 +49,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 
 func (h *AuthHandler) Refresh(c echo.Context) error {
 	// service call
-	if err := h.service.APIRefresh(c); err != nil {
+	if err := h.service.apiRefresh(c); err != nil {
 		return err
 	}
 
