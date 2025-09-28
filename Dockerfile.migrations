@@ -1,0 +1,29 @@
+# Dockerfile for migrations only
+FROM golang:1.25.1-alpine AS goose-build
+
+RUN apk add --no-cache git ca-certificates
+
+WORKDIR /build
+
+# Clone and build goose with only postgres support
+RUN git clone --depth=1 --branch v3.25.0 https://github.com/pressly/goose.git
+WORKDIR /build/goose
+RUN CGO_ENABLED=0 GOOS=linux go build \
+    -tags='no_mysql no_sqlite3 no_mssql no_clickhouse no_libsql no_vertica no_ydb' \
+    -ldflags='-w -s -extldflags "-static"' \
+    -a -installsuffix cgo \
+    -o /goose ./cmd/goose
+
+# Final migration image
+FROM alpine:3.20
+
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /app
+
+# Copy goose binary and migration files
+COPY --from=goose-build /goose /usr/local/bin/goose
+COPY migration/ ./migration/
+
+# Default command to run migrations
+CMD ["sh", "-c", "goose -dir ./migration postgres \"$DATABASE_URL\" up"]

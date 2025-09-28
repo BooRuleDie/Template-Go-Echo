@@ -10,6 +10,9 @@ docker-compose*.yml
 
 # Configuration files (keep essential ones, exclude sensitive)
 .env*
+*.env.local
+*.env.dev
+*.env.prod
 *.local
 
 # Version control

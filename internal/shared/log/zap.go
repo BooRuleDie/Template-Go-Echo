@@ -18,11 +18,11 @@ type zapLogger struct {
 func NewCustomLogger(cfg *config.ServerConfig) (CustomLogger, error) {
 	var zapCfg zap.Config
 
-	if cfg.Environment != "local" {
-		zapCfg = zap.NewProductionConfig()
-	} else {
+	if cfg.IsLocal() {
 		zapCfg = zap.NewDevelopmentConfig()
 		zapCfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	} else {
+		zapCfg = zap.NewProductionConfig()
 	}
 
 	// Add initial fields

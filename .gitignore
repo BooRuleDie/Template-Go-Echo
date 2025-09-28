@@ -5,6 +5,9 @@
 *.dylib
 *.envrc
 *.env
+*.env.local
+*.env.dev
+*.env.prod
 tmp/*
 
 # Test binary, build output

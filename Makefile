@@ -8,22 +8,99 @@ unit-test:
 build:
 	@go build -o tmp/build ./cmd/server
 
+.PHONY: docker-network
+docker-network:
+	@docker network create echo_template
 
-# Stop infrastructure with Docker Compose
-.PHONY: down
-down:
-	@docker compose down
+.PHONY: infra-up
+infra-up:
+	@docker compose -f docker-compose.infra.yml up -d
+
+.PHONY: infra-up-local
+infra-up-local:
+	@ENV_TYPE=local make infra-up
+
+.PHONY: infra-up-dev
+infra-up-dev:
+	@ENV_TYPE=dev make infra-up
+
+.PHONY: infra-up-prod
+infra-up-prod:
+	@ENV_TYPE=prod make infra-up
+
+.PHONY: infra-down
+infra-down:
+	@docker compose -f docker-compose.infra.yml down
+
+.PHONY: infra-down-local
+infra-down-local:
+	@ENV_TYPE=local make infra-down
+
+.PHONY: infra-down-dev
+infra-down-dev:
+	@ENV_TYPE=dev make infra-down
+
+.PHONY: infra-down-prod
+infra-down-prod:
+	@ENV_TYPE=prod make infra-down
 
 .PHONY: up
 up:
 	@echo "🚀 Starting complete development environment setup..."
-	@echo "\n📦 Step 1: Building Docker image..."
-	@docker build -f ./Dockerfile.local -t go-backend:latest .
-	@echo "\n🧹 Step 2: Cleaning old Docker images..."
+	@echo "\n🐳 Step 1: Starting infrastructure containers..."
+	@make infra-up-local
+	@sleep 3
+	@echo "\n📦 Step 2: Building Docker image..."
+	@docker build -f ./Dockerfile.local -t echo-template:local .
+	@echo "\n🧹 Step 3: Cleaning old Docker images..."
 	@docker image prune -f
-	@echo "\n🐳 Step 3: Starting infrastructure with Docker Compose..."
-	@docker compose up -d
+	@echo "\n🐳 Step 4: Starting application containers with Docker Compose..."
+	@ENV_FILE=.env.local ENV_TYPE=local docker compose -f docker-compose.local.yml up -d
 	@echo "\n✅ All setup completed! Migrations will run automatically before starting the app."
+
+.PHONY: down
+down:
+	@ENV_FILE=.env.local ENV_TYPE=local docker compose -f docker-compose.local.yml down
+	@make infra-down-local
+
+.PHONY: up-dev
+up-dev:
+	@echo "🚀 Starting development environment setup..."
+	@echo "\n🐳 Step 1: Starting development infrastructure containers..."
+	@make infra-up-dev
+	@sleep 3
+	@echo "\n📦 Step 2: Building Docker image for development..."
+	@ENV_FILE=.env.dev ENV_TYPE=dev docker build  -t echo-template:dev .
+	@echo "\n🧹 Step 3: Cleaning old Docker images..."
+	@docker image prune -f
+	@echo "\n🐳 Step 4: Starting development containers with Docker Compose..."
+	@ENV_FILE=.env.dev ENV_TYPE=dev docker compose up -d
+	@echo "\n✅ Development environment is ready!"
+
+.PHONY: down-dev
+down-dev:
+	@ENV_FILE=.env.dev ENV_TYPE=dev docker compose down
+	@make infra-down-dev
+
+.PHONY: up-prod
+up-prod:
+	@echo "🚀 Starting production environment setup..."
+	@echo "\n🐳 Step 1: Starting production infrastructure containers..."
+	@make infra-up-prod
+	@sleep 3
+	@echo "\n📦 Step 2: Building optimized Docker image for production..."
+	@ENV_FILE=.env.prod ENV_TYPE=prod docker build  -t echo-template:prod .
+	@echo "\n🧹 Step 3: Cleaning old Docker images..."
+	@docker image prune -f
+	@echo "\n🐳 Step 4: Starting production containers with Docker Compose..."
+	@ENV_FILE=.env.prod ENV_TYPE=prod docker compose up -d
+	@echo "\n✅ Production environment is ready!"
+
+# Stop production infrastructure
+.PHONY: down-prod
+down-prod:
+	@ENV_FILE=.env.prod ENV_TYPE=prod docker compose down
+	@make infra-down-prod
 
 # Clean the test cache
 .PHONY: clean-testcache
