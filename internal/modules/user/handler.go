@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"go-echo-template/internal/alarm"
-	"go-echo-template/internal/shared/auth"
+	"go-echo-template/internal/modules/auth"
 	constant "go-echo-template/internal/shared/constant"
 	"go-echo-template/internal/shared/log"
 	"go-echo-template/internal/shared/response"
@@ -50,7 +50,7 @@ func (h *UserHandler) GetUser(c echo.Context) error {
 	if err != nil {
 		return errInvalidID.WithArgs(param)
 	}
-	
+
 	// Access Control
 	if userFromCtx.ID != id {
 		return response.ErrSessionUnauthorized
@@ -123,7 +123,7 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 	if err := c.Validate(uur); err != nil {
 		return err
 	}
-	
+
 	// Access Control
 	if userFromCtx.ID != id {
 		return response.ErrSessionUnauthorized
@@ -152,7 +152,7 @@ func (h *UserHandler) DeleteUser(c echo.Context) error {
 	if err != nil {
 		return errInvalidID.WithArgs(param)
 	}
-	
+
 	// Access Control
 	if userFromCtx.ID != id {
 		return response.ErrSessionUnauthorized

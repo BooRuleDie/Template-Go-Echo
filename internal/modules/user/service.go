@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 
+	"go-echo-template/internal/modules/auth"
 	"go-echo-template/internal/modules/user/sqlc"
-	"go-echo-template/internal/shared/auth"
 	constant "go-echo-template/internal/shared/constant"
 	"go-echo-template/internal/shared/log"
 	"go-echo-template/internal/shared/utils"

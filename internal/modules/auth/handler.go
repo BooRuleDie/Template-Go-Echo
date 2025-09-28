@@ -14,10 +14,10 @@ type AuthHandler struct {
 	logger  log.CustomLogger
 	alarmer alarm.Alarmer
 
-	service authService
+	service AuthService
 }
 
-func NewAuthHandler(logger log.CustomLogger, alarmer alarm.Alarmer, service authService) *AuthHandler {
+func NewAuthHandler(logger log.CustomLogger, alarmer alarm.Alarmer, service AuthService) *AuthHandler {
 	return &AuthHandler{logger: logger, alarmer: alarmer, service: service}
 }
 
@@ -39,7 +39,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	}
 
 	// service call
-	if err := h.service.login(c, lr); err != nil {
+	if err := h.service.APILogin(c, lr); err != nil {
 		return err
 	}
 
@@ -49,7 +49,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 
 func (h *AuthHandler) Refresh(c echo.Context) error {
 	// service call
-	if err := h.service.refresh(c); err != nil {
+	if err := h.service.APIRefresh(c); err != nil {
 		return err
 	}
 
@@ -59,7 +59,7 @@ func (h *AuthHandler) Refresh(c echo.Context) error {
 
 func (h *AuthHandler) Logout(c echo.Context) error {
 	// service call
-	if err := h.service.logout(c); err != nil {
+	if err := h.service.Logout(c); err != nil {
 		return err
 	}
 
