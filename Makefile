@@ -15,6 +15,8 @@ docker-network:
 .PHONY: infra-up
 infra-up:
 	@docker compose -f docker-compose.infra.yml up -d
+	@echo "Sleeping for 3 seconds until infra is ready..."
+	@sleep 3
 
 .PHONY: infra-up-local
 infra-up-local:
@@ -49,7 +51,6 @@ up:
 	@echo "🚀 Starting complete development environment setup..."
 	@echo "\n🐳 Step 1: Starting infrastructure containers..."
 	@$(MAKE) --no-print-directory infra-up-local
-	@sleep 3
 	@echo "\n📦 Step 2: Building Docker image..."
 	@docker build -f ./Dockerfile.local -t echo-template:local .
 	@echo "\n🧹 Step 3: Cleaning old Docker images..."
@@ -68,7 +69,6 @@ up-dev:
 	@echo "🚀 Starting development environment setup..."
 	@echo "\n🐳 Step 1: Starting development infrastructure containers..."
 	@$(MAKE) --no-print-directory infra-up-dev
-	@sleep 3
 	@echo "\n📦 Step 2: Building Docker image for development..."
 	@ENV_FILE=.env.dev ENV_TYPE=dev docker build -t echo-template:dev .
 	@echo "\n🧹 Step 3: Cleaning old Docker images..."
@@ -87,7 +87,6 @@ up-prod:
 	@echo "🚀 Starting production environment setup..."
 	@echo "\n🐳 Step 1: Starting production infrastructure containers..."
 	@$(MAKE) --no-print-directory infra-up-prod
-	@sleep 3
 	@echo "\n📦 Step 2: Building optimized Docker image for production..."
 	@ENV_FILE=.env.prod ENV_TYPE=prod docker build -t echo-template:prod .
 	@echo "\n🧹 Step 3: Cleaning old Docker images..."
