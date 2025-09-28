@@ -18,15 +18,15 @@ infra-up:
 
 .PHONY: infra-up-local
 infra-up-local:
-	@ENV_TYPE=local make infra-up
+	@ENV_TYPE=local $(MAKE) --no-print-directory infra-up
 
 .PHONY: infra-up-dev
 infra-up-dev:
-	@ENV_TYPE=dev make infra-up
+	@ENV_TYPE=dev $(MAKE) --no-print-directory infra-up
 
 .PHONY: infra-up-prod
 infra-up-prod:
-	@ENV_TYPE=prod make infra-up
+	@ENV_TYPE=prod $(MAKE) --no-print-directory infra-up
 
 .PHONY: infra-down
 infra-down:
@@ -34,21 +34,21 @@ infra-down:
 
 .PHONY: infra-down-local
 infra-down-local:
-	@ENV_TYPE=local make infra-down
+	@ENV_TYPE=local $(MAKE) --no-print-directory infra-down
 
 .PHONY: infra-down-dev
 infra-down-dev:
-	@ENV_TYPE=dev make infra-down
+	@ENV_TYPE=dev $(MAKE) --no-print-directory infra-down
 
 .PHONY: infra-down-prod
 infra-down-prod:
-	@ENV_TYPE=prod make infra-down
+	@ENV_TYPE=prod $(MAKE) --no-print-directory infra-down
 
 .PHONY: up
 up:
 	@echo "🚀 Starting complete development environment setup..."
 	@echo "\n🐳 Step 1: Starting infrastructure containers..."
-	@make infra-up-local
+	@$(MAKE) --no-print-directory infra-up-local
 	@sleep 3
 	@echo "\n📦 Step 2: Building Docker image..."
 	@docker build -f ./Dockerfile.local -t echo-template:local .
@@ -61,16 +61,16 @@ up:
 .PHONY: down
 down:
 	@ENV_FILE=.env.local ENV_TYPE=local docker compose -f docker-compose.local.yml down
-	@make infra-down-local
+	@$(MAKE) --no-print-directory infra-down-local
 
 .PHONY: up-dev
 up-dev:
 	@echo "🚀 Starting development environment setup..."
 	@echo "\n🐳 Step 1: Starting development infrastructure containers..."
-	@make infra-up-dev
+	@$(MAKE) --no-print-directory infra-up-dev
 	@sleep 3
 	@echo "\n📦 Step 2: Building Docker image for development..."
-	@ENV_FILE=.env.dev ENV_TYPE=dev docker build  -t echo-template:dev .
+	@ENV_FILE=.env.dev ENV_TYPE=dev docker build -t echo-template:dev .
 	@echo "\n🧹 Step 3: Cleaning old Docker images..."
 	@docker image prune -f
 	@echo "\n🐳 Step 4: Starting development containers with Docker Compose..."
@@ -80,16 +80,16 @@ up-dev:
 .PHONY: down-dev
 down-dev:
 	@ENV_FILE=.env.dev ENV_TYPE=dev docker compose down
-	@make infra-down-dev
+	@$(MAKE) --no-print-directory infra-down-dev
 
 .PHONY: up-prod
 up-prod:
 	@echo "🚀 Starting production environment setup..."
 	@echo "\n🐳 Step 1: Starting production infrastructure containers..."
-	@make infra-up-prod
+	@$(MAKE) --no-print-directory infra-up-prod
 	@sleep 3
 	@echo "\n📦 Step 2: Building optimized Docker image for production..."
-	@ENV_FILE=.env.prod ENV_TYPE=prod docker build  -t echo-template:prod .
+	@ENV_FILE=.env.prod ENV_TYPE=prod docker build -t echo-template:prod .
 	@echo "\n🧹 Step 3: Cleaning old Docker images..."
 	@docker image prune -f
 	@echo "\n🐳 Step 4: Starting production containers with Docker Compose..."
@@ -100,7 +100,7 @@ up-prod:
 .PHONY: down-prod
 down-prod:
 	@ENV_FILE=.env.prod ENV_TYPE=prod docker compose down
-	@make infra-down-prod
+	@$(MAKE) --no-print-directory infra-down-prod
 
 # Clean the test cache
 .PHONY: clean-testcache
