@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	constant "go-echo-template/internal/shared/constant"
+	"go-echo-template/internal/shared"
 	"go-echo-template/internal/shared/response"
 
 	"github.com/go-playground/validator/v10"
@@ -12,7 +12,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-const RequestIDKey constant.ContextKey = "request_id"
+const RequestIDKey shared.ContextKey = "request_id"
 const RequestIDKeyStr string = string(RequestIDKey)
 
 // logger middleware

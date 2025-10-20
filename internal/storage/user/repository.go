@@ -3,21 +3,18 @@ package user
 import (
 	"context"
 	"database/sql"
-	"errors"
 
 	DB "go-echo-template/internal/db"
-	"go-echo-template/internal/modules/user/sqlc"
 	"go-echo-template/internal/shared/log"
 	"go-echo-template/internal/shared/response"
-
-	"github.com/jackc/pgx/v5/pgconn"
+	"go-echo-template/internal/storage/user/sqlc"
 )
 
-type userRepository interface {
-	getUserById(ctx context.Context, userID int64) (*sqlc.User, error)
-	createUser(ctx context.Context, params sqlc.CreateUserParams) (int64, error)
-	updateUser(ctx context.Context, params sqlc.UpdateUserParams) (*sqlc.User, error)
-	deleteUser(ctx context.Context, userID int64) error
+type UserRepository interface {
+	GetUserById(ctx context.Context, userID int64) (*sqlc.User, error)
+	CreateUser(ctx context.Context, params sqlc.CreateUserParams) (int64, error)
+	UpdateUser(ctx context.Context, params sqlc.UpdateUserParams) (*sqlc.User, error)
+	DeleteUser(ctx context.Context, userID int64) error
 }
 
 type repository struct {
@@ -26,14 +23,14 @@ type repository struct {
 	db      *sql.DB
 	queries *sqlc.Queries
 
-	cache userCache
+	cache UserCache
 }
 
-func NewUserRepository(logger log.CustomLogger, db *sql.DB, cache userCache) userRepository {
+func NewUserRepository(logger log.CustomLogger, db *sql.DB, cache UserCache) UserRepository {
 	return &repository{logger: logger, db: db, queries: sqlc.New(db), cache: cache}
 }
 
-func (r *repository) getUserById(ctx context.Context, userID int64) (*sqlc.User, error) {
+func (r *repository) GetUserById(ctx context.Context, userID int64) (*sqlc.User, error) {
 	userFromCache, err := r.cache.Get(ctx, userID)
 	if err != nil {
 		r.logger.WarnWithContext(ctx, "failed to get user from cache", r.logger.Err(err), r.logger.Int("userID", int(userID)))
@@ -69,36 +66,25 @@ func (r *repository) getUserById(ctx context.Context, userID int64) (*sqlc.User,
 	return user, nil
 }
 
-func (r *repository) createUser(ctx context.Context, params sqlc.CreateUserParams) (int64, error) {
+func (r *repository) CreateUser(ctx context.Context, params sqlc.CreateUserParams) (int64, error) {
 	userID, err := r.queries.CreateUser(ctx, params)
 	if err != nil {
-		// Check for unique constraint violation on users_email_unique_active
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			return 0, errUserEmailAlreadyExists
-		}
 		return 0, err
 	}
 	return userID, nil
 }
 
-func (r *repository) updateUser(ctx context.Context, params sqlc.UpdateUserParams) (*sqlc.User, error) {
+func (r *repository) UpdateUser(ctx context.Context, params sqlc.UpdateUserParams) (*sqlc.User, error) {
 	var user *sqlc.User
 	if txErr := DB.WithTx(ctx, r.db, func(tx *sql.Tx) error {
 		qtx := r.queries.WithTx(tx)
 
 		if err := qtx.UpdateUser(ctx, params); err != nil {
-			if err == sql.ErrNoRows {
-				return response.ErrUserNotFound
-			}
 			return err
 		}
 
 		userRow, err := qtx.GetUserById(ctx, params.ID)
 		if err != nil {
-			if err == sql.ErrNoRows {
-				return response.ErrUserNotFound
-			}
 			return err
 		}
 
@@ -131,7 +117,7 @@ func (r *repository) updateUser(ctx context.Context, params sqlc.UpdateUserParam
 	return user, nil
 }
 
-func (r *repository) deleteUser(ctx context.Context, userID int64) error {
+func (r *repository) DeleteUser(ctx context.Context, userID int64) error {
 	err := r.queries.DeleteUser(ctx, userID)
 	if err != nil {
 		return err

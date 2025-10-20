@@ -6,7 +6,7 @@ import (
 
 	"go-echo-template/internal/alarm"
 	"go-echo-template/internal/modules/auth"
-	constant "go-echo-template/internal/shared/constant"
+	"go-echo-template/internal/shared"
 	"go-echo-template/internal/shared/log"
 	"go-echo-template/internal/shared/response"
 
@@ -31,7 +31,7 @@ func (h *UserHandler) RegisterRoutes(e *echo.Group) {
 	users.POST("/", h.CreateUser)
 
 	// authenticated APIs
-	usersAuth := users.Group("", h.auth.CheckAuth(false, constant.RoleCustomer))
+	usersAuth := users.Group("", h.auth.CheckAuth(false, shared.RoleCustomer))
 	usersAuth.GET("/:id", h.GetUser)
 	usersAuth.PATCH("/:id", h.UpdateUser)
 	usersAuth.DELETE("/:id", h.DeleteUser)
@@ -62,20 +62,7 @@ func (h *UserHandler) GetUser(c echo.Context) error {
 		return err
 	}
 
-	// build response
-	getUserResp := &GetUserResponse{
-		ID:        user.ID,
-		Name:      user.Name,
-		Email:     user.Email,
-		Phone:     nil,
-		Role:      user.Role,
-		CreatedAt: user.CreatedAt.Format(constant.DefaultDateFormat),
-		UpdatedAt: user.UpdatedAt.Format(constant.DefaultDateFormat),
-	}
-	if user.Phone.Valid {
-		getUserResp.Phone = &user.Phone.String
-	}
-	return response.Success(c, http.StatusOK).WithData(getUserResp).Send()
+	return response.Success(c, http.StatusOK).WithData(user).Send()
 }
 
 func (h *UserHandler) CreateUser(c echo.Context) error {

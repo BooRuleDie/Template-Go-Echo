@@ -1,4 +1,4 @@
-package conts
+package shared
 
 // User Roles
 const (

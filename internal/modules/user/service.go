@@ -5,35 +5,58 @@ import (
 	"database/sql"
 
 	"go-echo-template/internal/modules/auth"
-	"go-echo-template/internal/modules/user/sqlc"
-	constant "go-echo-template/internal/shared/constant"
+	"go-echo-template/internal/shared"
 	"go-echo-template/internal/shared/log"
+	"go-echo-template/internal/shared/response"
 	"go-echo-template/internal/shared/utils"
+	"go-echo-template/internal/storage"
+	"go-echo-template/internal/storage/user/sqlc"
 
 	"github.com/labstack/echo/v4"
 )
 
 type userService interface {
-	getUser(ctx context.Context, id int64) (*sqlc.User, error)
+	getUser(ctx context.Context, id int64) (*GetUserResponse, error)
 	createUser(ctx context.Context, cur *CreateUserRequest) (int64, error)
 	updateUser(c echo.Context, uur *UpdateUserRequest) error
 	deleteUser(c echo.Context, id int64) error
 }
 
 type service struct {
-	logger log.CustomLogger
-	repo   userRepository
-
-	auth auth.AuthService
+	logger  log.CustomLogger
+	storage *storage.Storage
+	auth    auth.AuthService
 }
 
-func NewUserService(logger log.CustomLogger, repo userRepository, authService auth.AuthService) userService {
-	return &service{repo: repo, logger: logger, auth: authService}
+func NewUserService(logger log.CustomLogger, storage *storage.Storage, authService auth.AuthService) userService {
+	return &service{storage: storage, logger: logger, auth: authService}
 }
 
-func (s *service) getUser(ctx context.Context, id int64) (*sqlc.User, error) {
+func (s *service) getUser(ctx context.Context, id int64) (*GetUserResponse, error) {
 	// repo call
-	return s.repo.getUserById(ctx, id)
+	user, err := s.storage.User.GetUserById(ctx, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, response.ErrUserNotFound
+		}
+		return nil, err
+	}
+
+	// build response
+	getUserResp := &GetUserResponse{
+		ID:        user.ID,
+		Name:      user.Name,
+		Email:     user.Email,
+		Phone:     nil,
+		Role:      user.Role,
+		CreatedAt: user.CreatedAt.Format(shared.DefaultDateFormat),
+		UpdatedAt: user.UpdatedAt.Format(shared.DefaultDateFormat),
+	}
+	if user.Phone.Valid {
+		getUserResp.Phone = &user.Phone.String
+	}
+
+	return getUserResp, nil
 }
 
 func (s *service) createUser(ctx context.Context, cur *CreateUserRequest) (int64, error) {
@@ -51,12 +74,12 @@ func (s *service) createUser(ctx context.Context, cur *CreateUserRequest) (int64
 		Name:     cur.Name,
 		Email:    cur.Email,
 		Phone:    phone,
-		Role:     constant.RoleCustomer,
+		Role:     shared.RoleCustomer,
 		Password: password,
 	}
 
 	// repo call
-	return s.repo.createUser(ctx, params)
+	return s.storage.User.CreateUser(ctx, params)
 }
 
 func (s *service) updateUser(c echo.Context, uur *UpdateUserRequest) error {
@@ -74,7 +97,7 @@ func (s *service) updateUser(c echo.Context, uur *UpdateUserRequest) error {
 	}
 
 	// repo call
-	user, err := s.repo.updateUser(c.Request().Context(), params)
+	user, err := s.storage.User.UpdateUser(c.Request().Context(), params)
 	if err != nil {
 		return nil
 	}
@@ -102,5 +125,5 @@ func (s *service) deleteUser(c echo.Context, id int64) error {
 	}
 
 	// repo call
-	return s.repo.deleteUser(c.Request().Context(), id)
+	return s.storage.User.DeleteUser(c.Request().Context(), id)
 }

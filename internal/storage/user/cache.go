@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 
 	keys "go-echo-template/internal/cache"
-	"go-echo-template/internal/modules/user/sqlc"
+	"go-echo-template/internal/storage/user/sqlc"
 
 	"github.com/redis/go-redis/v9"
 )
 
-type userCache interface {
+type UserCache interface {
 	Get(ctx context.Context, userID int64) (*sqlc.User, error)
 	Set(ctx context.Context, user *sqlc.User) error
 	Delete(ctx context.Context, userID int64) error
@@ -20,7 +20,7 @@ type cache struct {
 	rc *redis.Client
 }
 
-func NewUserCache(rc *redis.Client) userCache {
+func NewUserCache(rc *redis.Client) UserCache {
 	return &cache{rc: rc}
 }
 

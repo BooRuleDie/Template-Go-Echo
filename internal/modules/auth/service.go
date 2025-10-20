@@ -8,10 +8,11 @@ import (
 	"time"
 
 	"go-echo-template/internal/config"
-	constant "go-echo-template/internal/shared/constant"
+	"go-echo-template/internal/shared"
 	"go-echo-template/internal/shared/log"
 	"go-echo-template/internal/shared/response"
 	"go-echo-template/internal/shared/utils"
+	"go-echo-template/internal/storage"
 
 	"github.com/labstack/echo/v4"
 	"github.com/redis/go-redis/v9"
@@ -22,7 +23,7 @@ const (
 	SessionKeyPrefix     = "SESSION:"
 	SessionCookieName    = "session"
 
-	UserContextKey constant.ContextKey = "user"
+	UserContextKey shared.ContextKey = "user"
 )
 
 type AuthService interface {
@@ -52,21 +53,19 @@ type User struct {
 }
 
 type service struct {
-	logger log.CustomLogger
-	cache  *redis.Client
-	cfg    *config.ServerConfig
-
-	repo authRepository
+	cfg     *config.ServerConfig
+	cache   *redis.Client
+	logger  log.CustomLogger
+	storage *storage.Storage
 }
 
 func NewSessionCookieService(
-	logger log.CustomLogger,
 	cfg *config.ServerConfig,
-	
-	repo authRepository,
+	logger log.CustomLogger,
 	cache *redis.Client,
+	storage *storage.Storage,
 ) AuthService {
-	return &service{logger: logger, repo: repo, cache: cache, cfg: cfg}
+	return &service{logger: logger, storage: storage, cache: cache, cfg: cfg}
 }
 
 // --- GENERIC SESSION METHODS ---
@@ -265,7 +264,7 @@ func (s *service) CheckAuth(isOptional bool, roles ...string) echo.MiddlewareFun
 
 func (s *service) apiLogin(c echo.Context, req *LoginRequest) error {
 	// Get user by email
-	userRow, err := s.repo.getUserByEmail(c.Request().Context(), req.Email)
+	userRow, err := s.storage.Auth.GetUserByEmail(c.Request().Context(), req.Email)
 	if err != nil {
 		return response.ErrSessionUnauthorized
 	}

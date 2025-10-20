@@ -17,6 +17,9 @@ import (
 	"go-echo-template/internal/shared/i18n"
 	"go-echo-template/internal/shared/log"
 	"go-echo-template/internal/shared/response"
+	"go-echo-template/internal/storage"
+	storageAuth "go-echo-template/internal/storage/auth"
+	storageUser "go-echo-template/internal/storage/user"
 	"go-echo-template/web"
 
 	"github.com/labstack/echo/v4"
@@ -79,15 +82,20 @@ func main() {
 	// API grouping
 	api := e.Group("/api")
 
+	// New Storage Dependencies
+	authRepo := storageAuth.NewAuthRepository(logger, postgreSQL)
+	userCache := storageUser.NewUserCache(redis)
+	userRepo := storageUser.NewUserRepository(logger, postgreSQL, userCache)
+
+	// New Storage
+	newStorage := storage.NewStorage(userRepo, authRepo)
+
 	// Auth
-	authRepo := auth.NewAuthRepository(logger, postgreSQL)
-	authService := auth.NewSessionCookieService(logger, cfg.Server, authRepo, redis)
+	authService := auth.NewSessionCookieService(cfg.Server, logger, redis, newStorage)
 	auth.NewAuthHandler(logger, alarmer, authService).RegisterRoutes(api)
 
-	// Register user routes
-	userCache := user.NewUserCache(redis)
-	userRepo := user.NewUserRepository(logger, postgreSQL, userCache)
-	userService := user.NewUserService(logger, userRepo, authService)
+	// User
+	userService := user.NewUserService(logger, newStorage, authService)
 	user.NewUserHandler(logger, alarmer, userService, authService).RegisterRoutes(api)
 
 	// Register web route
