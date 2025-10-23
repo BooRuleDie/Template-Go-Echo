@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"go-echo-template/internal/alarm"
+	"go-echo-template/internal/shared"
 	"go-echo-template/internal/shared/log"
 	"go-echo-template/internal/shared/response"
 
@@ -32,7 +33,7 @@ func (h *AuthHandler) Login(c echo.Context) error {
 	// validate input
 	lr := new(LoginRequest)
 	if err := c.Bind(lr); err != nil {
-		return response.ErrInvalidRequestPayload
+		return shared.ErrInvalidRequestPayload
 	}
 	if err := c.Validate(lr); err != nil {
 		return err

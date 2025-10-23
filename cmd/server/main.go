@@ -88,7 +88,7 @@ func main() {
 	userRepo := storageUser.NewUserRepository(logger, postgreSQL, userCache)
 
 	// New Storage
-	newStorage := storage.NewStorage(userRepo, authRepo)
+	newStorage := storage.NewStorage(postgreSQL, userRepo, authRepo)
 
 	// Auth
 	authService := auth.NewSessionCookieService(cfg.Server, logger, redis, newStorage)

@@ -41,7 +41,7 @@ func (h *UserHandler) GetUser(c echo.Context) error {
 	ctx := c.Request().Context()
 	userFromCtx, ok := auth.GetUserFromContext(c)
 	if !ok {
-		return response.ErrUserNotFound
+		return shared.ErrUserNotFound
 	}
 
 	// validate input
@@ -53,7 +53,7 @@ func (h *UserHandler) GetUser(c echo.Context) error {
 
 	// Access Control
 	if userFromCtx.ID != id {
-		return response.ErrSessionUnauthorized
+		return shared.ErrSessionUnauthorized
 	}
 
 	// service call
@@ -71,7 +71,7 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 	// validate input
 	cur := new(CreateUserRequest)
 	if err := c.Bind(cur); err != nil {
-		return response.ErrInvalidRequestPayload
+		return shared.ErrInvalidRequestPayload
 	}
 	if err := c.Validate(cur); err != nil {
 		return err
@@ -94,7 +94,7 @@ func (h *UserHandler) CreateUser(c echo.Context) error {
 func (h *UserHandler) UpdateUser(c echo.Context) error {
 	userFromCtx, ok := auth.GetUserFromContext(c)
 	if !ok {
-		return response.ErrUserNotFound
+		return shared.ErrUserNotFound
 	}
 
 	// validate input
@@ -105,7 +105,7 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 	}
 	uur := new(UpdateUserRequest)
 	if err := c.Bind(&uur); err != nil {
-		return response.ErrInvalidRequestPayload
+		return shared.ErrInvalidRequestPayload
 	}
 	if err := c.Validate(uur); err != nil {
 		return err
@@ -113,7 +113,7 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 
 	// Access Control
 	if userFromCtx.ID != id {
-		return response.ErrSessionUnauthorized
+		return shared.ErrSessionUnauthorized
 	}
 
 	// service call
@@ -130,7 +130,7 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 func (h *UserHandler) DeleteUser(c echo.Context) error {
 	userFromCtx, ok := auth.GetUserFromContext(c)
 	if !ok {
-		return response.ErrUserNotFound
+		return shared.ErrUserNotFound
 	}
 
 	// validate input
@@ -142,7 +142,7 @@ func (h *UserHandler) DeleteUser(c echo.Context) error {
 
 	// Access Control
 	if userFromCtx.ID != id {
-		return response.ErrSessionUnauthorized
+		return shared.ErrSessionUnauthorized
 	}
 
 	// service call

@@ -33,25 +33,3 @@ func NewPostgreSQL(ctx context.Context, DBConfig *config.DBConfig) (*sql.DB, err
 
 	return db, nil
 }
-
-// withTx is a helper that wraps tx begin/commit/rollback logic for a function using *sql.DB.
-func WithTx(ctx context.Context, db *sql.DB, fn func(*sql.Tx) error) error {
-	tx, err := db.BeginTx(ctx, nil)
-	if err != nil {
-		return err
-	}
-
-	defer func() {
-		if p := recover(); p != nil {
-			_ = tx.Rollback()
-			panic(p)
-		}
-	}()
-
-	if err := fn(tx); err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-
-	return tx.Commit()
-}

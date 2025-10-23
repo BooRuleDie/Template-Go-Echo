@@ -11,17 +11,27 @@ import (
 type AuthRepository interface {
 	GetUserByEmail(ctx context.Context, email string) (*sqlc.GetUserByEmailRow, error)
 	GetUserById(ctx context.Context, userID int64) (*sqlc.GetUserByIdRow, error)
+
+	WithTx(tx *sql.Tx) AuthRepository
 }
 
 type repository struct {
 	logger log.CustomLogger
 
-	db      *sql.DB
+	db      sqlc.DBTX
 	queries *sqlc.Queries
 }
 
 func NewAuthRepository(logger log.CustomLogger, db *sql.DB) AuthRepository {
 	return &repository{logger: logger, db: db, queries: sqlc.New(db)}
+}
+
+func (r *repository) WithTx(tx *sql.Tx) AuthRepository {
+	return &repository{
+		logger:  r.logger,
+		queries: sqlc.New(tx),
+		db:      tx,
+	}
 }
 
 func (r *repository) GetUserByEmail(ctx context.Context, email string) (*sqlc.GetUserByEmailRow, error) {

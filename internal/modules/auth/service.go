@@ -10,7 +10,6 @@ import (
 	"go-echo-template/internal/config"
 	"go-echo-template/internal/shared"
 	"go-echo-template/internal/shared/log"
-	"go-echo-template/internal/shared/response"
 	"go-echo-template/internal/shared/utils"
 	"go-echo-template/internal/storage"
 
@@ -239,7 +238,7 @@ func (s *service) CheckAuth(isOptional bool, roles ...string) echo.MiddlewareFun
 				if isOptional {
 					return next(c)
 				}
-				return response.ErrSessionUnauthorized
+				return shared.ErrSessionUnauthorized
 			}
 
 			if len(roles) > 0 {
@@ -251,7 +250,7 @@ func (s *service) CheckAuth(isOptional bool, roles ...string) echo.MiddlewareFun
 					}
 				}
 				if !hasRole {
-					return response.ErrSessionUnauthorized
+					return shared.ErrSessionUnauthorized
 				}
 			}
 
@@ -266,12 +265,12 @@ func (s *service) apiLogin(c echo.Context, req *LoginRequest) error {
 	// Get user by email
 	userRow, err := s.storage.Auth.GetUserByEmail(c.Request().Context(), req.Email)
 	if err != nil {
-		return response.ErrSessionUnauthorized
+		return shared.ErrSessionUnauthorized
 	}
 
 	// Check password using bcrypt helper
 	if !utils.CheckPasswordHash(req.Password, userRow.Password) {
-		return response.ErrSessionUnauthorized
+		return shared.ErrSessionUnauthorized
 	}
 
 	user := &User{

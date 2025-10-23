@@ -1,12 +1,14 @@
-package response
+package shared
 
 import (
-	"go-echo-template/internal/shared/i18n"
 	"net/http"
+
+	"go-echo-template/internal/shared/i18n"
+	"go-echo-template/internal/shared/response"
 )
 
 var (
-	ErrInvalidRequestPayload = &CustomErr{
+	ErrInvalidRequestPayload = &response.CustomErr{
 		Status: http.StatusBadRequest,
 		Code:   "ERR:USER_INVALID_REQUEST_PAYLOAD",
 		Messages: map[i18n.Locale]string{
@@ -15,7 +17,7 @@ var (
 		},
 	}
 
-	ErrUserNotFound = &CustomErr{
+	ErrUserNotFound = &response.CustomErr{
 		Status: http.StatusNotFound,
 		Code:   "ERR:USER_NOT_FOUND",
 		Messages: map[i18n.Locale]string{
@@ -23,8 +25,8 @@ var (
 			i18n.TR_TR: "Kullanıcı bulunamadı",
 		},
 	}
-	
-	ErrSessionUnauthorized = &CustomErr{
+
+	ErrSessionUnauthorized = &response.CustomErr{
 		Status: http.StatusUnauthorized,
 		Code:   "ERR:SESSION_UNAUTHORIZED",
 		Messages: map[i18n.Locale]string{

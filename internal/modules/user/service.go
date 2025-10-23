@@ -7,7 +7,6 @@ import (
 	"go-echo-template/internal/modules/auth"
 	"go-echo-template/internal/shared"
 	"go-echo-template/internal/shared/log"
-	"go-echo-template/internal/shared/response"
 	"go-echo-template/internal/shared/utils"
 	"go-echo-template/internal/storage"
 	"go-echo-template/internal/storage/user/sqlc"
@@ -36,9 +35,6 @@ func (s *service) getUser(ctx context.Context, id int64) (*GetUserResponse, erro
 	// repo call
 	user, err := s.storage.User.GetUserById(ctx, id)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, response.ErrUserNotFound
-		}
 		return nil, err
 	}
 
@@ -60,22 +56,21 @@ func (s *service) getUser(ctx context.Context, id int64) (*GetUserResponse, erro
 }
 
 func (s *service) createUser(ctx context.Context, cur *CreateUserRequest) (int64, error) {
-	// convert dto to params
-	var phone sql.NullString
-	if cur.Phone != nil {
-		phone.Valid = true
-		phone.String = *cur.Phone
-	}
 	password, err := utils.HashPassword(cur.Password)
 	if err != nil {
 		return 0, err
 	}
+
 	params := sqlc.CreateUserParams{
 		Name:     cur.Name,
 		Email:    cur.Email,
-		Phone:    phone,
+		Phone:    sql.NullString{},
 		Role:     shared.RoleCustomer,
 		Password: password,
+	}
+	if cur.Phone != nil {
+		params.Phone.Valid = true
+		params.Phone.String = *cur.Phone
 	}
 
 	// repo call
@@ -83,35 +78,50 @@ func (s *service) createUser(ctx context.Context, cur *CreateUserRequest) (int64
 }
 
 func (s *service) updateUser(c echo.Context, uur *UpdateUserRequest) error {
+	ctx := c.Request().Context()
+
 	// convert dto to params
-	var phone sql.NullString
-	if uur.Phone != nil {
-		phone.Valid = true
-		phone.String = *uur.Phone
-	}
 	params := sqlc.UpdateUserParams{
 		ID:    uur.ID,
 		Name:  uur.Name,
 		Email: uur.Email,
-		Phone: phone,
+		Phone: sql.NullString{},
+	}
+	if uur.Phone != nil {
+		params.Phone.Valid = true
+		params.Phone.String = *uur.Phone
 	}
 
-	// repo call
-	user, err := s.storage.User.UpdateUser(c.Request().Context(), params)
-	if err != nil {
+	// transaction example in service layer using storage
+	var newUser *sqlc.User
+	if err := s.storage.WithTx(ctx, func(storageTx *storage.Storage) error {
+		err := storageTx.User.UpdateUser(ctx, params)
+		if err != nil {
+			return err
+		}
+
+		user, err := storageTx.User.GetUserById(ctx, params.ID)
+		if err != nil {
+			return err
+		}
+
+		newUser = user
 		return nil
+	}); err != nil {
+		return err
 	}
 
 	// refresh token data
 	sessionUser := &auth.User{
-		ID:        user.ID,
-		Name:      user.Name,
-		Email:     user.Email,
-		Phone:     user.Phone.String,
-		Role:      user.Role,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
+		ID:        newUser.ID,
+		Name:      newUser.Name,
+		Email:     newUser.Email,
+		Phone:     newUser.Phone.String,
+		Role:      newUser.Role,
+		CreatedAt: newUser.CreatedAt,
+		UpdatedAt: newUser.UpdatedAt,
 	}
+
 	if err := s.auth.Refresh(c, sessionUser); err != nil {
 		s.logger.Error("delete user session after removal is failed", s.logger.Err(err))
 	}
