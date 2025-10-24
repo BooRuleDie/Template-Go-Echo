@@ -1,0 +1,51 @@
+# Stage 1: Build Vite web application
+FROM node:20-alpine AS web-build
+WORKDIR /web
+
+# Copy package files
+COPY web/package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy web source code
+COPY web/ ./
+
+# Build the Vite app
+RUN npm run build:stage
+
+# Stage 2: Build Go application
+FROM golang:1.25.1-alpine AS go-build
+
+# Install ca-certificates in the build stage
+RUN apk add --no-cache ca-certificates git tzdata
+WORKDIR /build
+
+# Copy dependency files
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Copy built web assets from web-build stage
+COPY --from=web-build /web/dist ./web/dist
+
+# Build static binary with all optimizations
+RUN CGO_ENABLED=0 GOOS=linux go build \
+    -ldflags='-w -s -extldflags "-static"' \
+    -a -installsuffix cgo \
+    -o main ./cmd/server
+
+# Stage 3: Final minimal image
+FROM scratch
+# Copy ca-certificates from build stage (needed for HTTPS)
+COPY --from=go-build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+# Copy the static binary
+COPY --from=go-build /build/main /main
+
+# Expose port
+EXPOSE 8080
+
+# Run the binary
+CMD ["/main"]

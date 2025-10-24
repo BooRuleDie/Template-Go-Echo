@@ -4,7 +4,7 @@
 - [x] decide transaction flow
     * NewTX under storage
     * transaction inside the service layer
-- [ ] fix docker pattern in the template
+- [x] fix docker pattern in the template
 - [ ] fix auth 
 - [ ] decide handler > service > repo responsibilities
     * Also mention the anti-patterns for each layer
